@@ -1,26 +1,39 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* ATC Brand Colors */
+  --navy: #002446;
+  --lime: #d1da8f;
+  --teal: #61a4b0;
+  --salmon: #eba687;
+  --off-white: #f6f6f2;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Light theme */
+  --background: var(--off-white);
+  --foreground: var(--navy);
+  --card-bg: #ffffff;
+  --border-color: #e5e5e0;
+  --text-secondary: #666666;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a1a18;
+    --foreground: #f6f6f2;
+    --card-bg: #2a2a28;
+    --border-color: #3a3a38;
+    --text-secondary: #b0b0aa;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Jost', sans-serif;
+  font-weight: 600;
 }
