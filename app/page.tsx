@@ -4,125 +4,105 @@ import Link from 'next/link'
 
 export default function LoginPage() {
   const demoAccounts = [
-    { role: 'cdp', name: 'Gestionnaire de projets', email: 'cdp@authentictalent.fr', link: '/dashboard', desc: 'Pilote tes Assessment Centers' },
-    { role: 'candidate', name: 'Candidat', email: 'candidate@demo.fr', link: '/candidate/pre-ac', desc: 'Accède à ton parcours' },
-    { role: 'assessor', name: 'Assesseur', email: 'assessor@demo.fr', link: '/assessor/dashboard', desc: 'Manage tes sessions' },
+    { role: 'cdp', name: 'Gestionnaire', email: 'cdp@authentictalent.fr', link: '/dashboard' },
+    { role: 'candidate', name: 'Candidat', email: 'candidate@demo.fr', link: '/candidate/pre-ac' },
+    { role: 'assessor', name: 'Assesseur', email: 'assessor@demo.fr', link: '/assessor/dashboard' },
   ]
 
   return (
-    <div className="min-h-screen bg-navy text-white flex flex-col relative overflow-hidden">
-      {/* Decorative elements */}
-      <div className="absolute top-20 right-20 w-80 h-80 border-2 border-lime/30 rounded-full pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 border border-teal/20 rounded-full pointer-events-none" />
-      <div className="absolute top-1/2 right-10 w-40 h-40 border border-lime/10 rounded-lg pointer-events-none transform rotate-45" />
-
+    <div className="min-h-screen bg-[#0A1628] text-white flex flex-col">
       {/* Header */}
-      <header className="relative z-10 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
+      <header className="border-b border-white/10 px-8 py-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold" style={{ fontFamily: 'Jost' }}>
+            <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: 'Jost' }}>
               ATC Journey
             </h1>
-            <p className="text-xs text-lime mt-1" style={{ fontFamily: 'Nunito Sans' }}>
+            <p className="text-[#D1DA8F] text-xs mt-1" style={{ fontFamily: 'Nunito Sans' }}>
               Make your talent shine
             </p>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm">
-            <button className="text-white/70 hover:text-white transition-colors">Pré-AC</button>
-            <button className="text-white/70 hover:text-white transition-colors">Jour J</button>
-            <button className="text-white/70 hover:text-white transition-colors">Assesseurs</button>
-            <button className="text-white/70 hover:text-white transition-colors">Débrief</button>
+          <nav className="hidden md:flex gap-12 text-sm">
+            <button className="text-white/60 hover:text-white transition">Pré-AC</button>
+            <button className="text-white/60 hover:text-white transition">Jour J</button>
+            <button className="text-white/60 hover:text-white transition">Assesseurs</button>
+            <button className="text-white/60 hover:text-white transition">Débrief</button>
           </nav>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-8 py-16">
-        <div className="w-full max-w-4xl">
-          {/* Hero Section */}
-          <div className="text-center mb-20">
-            <p className="text-sm text-lime mb-6 tracking-widest font-medium" style={{ fontFamily: 'Nunito Sans' }}>
-              PLATEFORME ASSESSMENT CENTER · BY AUTHENTIC TALENT CONSULTING
-            </p>
+      {/* Main */}
+      <main className="flex-1 flex items-center justify-center px-8 py-24">
+        <div className="w-full max-w-3xl">
+          {/* Tagline */}
+          <p className="text-center text-[#D1DA8F] text-sm tracking-widest font-medium mb-8" style={{ fontFamily: 'Nunito Sans' }}>
+            PLATEFORME ASSESSMENT CENTER · PAR AUTHENTIC TALENT CONSULTING
+          </p>
 
-            <h2 className="text-6xl md:text-7xl font-bold mb-8 leading-tight" style={{ fontFamily: 'Jost' }}>
-              Tout ce qu'un Assessment Center mérite.
-            </h2>
+          {/* Heading */}
+          <h2 className="text-5xl md:text-6xl font-bold text-center mb-8 leading-tight" style={{ fontFamily: 'Jost' }}>
+            Tout ce qu'un Assessment Center mérite.
+          </h2>
 
-            <p className="text-lg text-white/70 max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: 'Nunito Sans' }}>
-              La même qualité que tu apportes à tes projets, appliquée à ton Assessment Center. Guides précis, outils modernes, expertise à portée de main.
-            </p>
+          {/* Subtitle */}
+          <p className="text-center text-white/60 mb-12 text-lg max-w-2xl mx-auto" style={{ fontFamily: 'Nunito Sans' }}>
+            La plateforme dédiée aux Assessment Centers. Pilote tes projets de talent management en toute sérénité, du début à la fin.
+          </p>
+
+          {/* Search Bar */}
+          <div className="bg-white/10 border border-white/20 rounded-full px-6 py-4 mb-12 flex items-center gap-3">
+            <span className="text-white/40">🔍</span>
+            <input
+              type="text"
+              placeholder="Cherche un projet, ta pré-AC, ton planning..."
+              className="flex-1 bg-transparent text-white placeholder-white/40 outline-none text-center"
+              style={{ fontFamily: 'Nunito Sans' }}
+            />
           </div>
 
-          {/* Search/CTA Section */}
-          <div className="max-w-2xl mx-auto mb-20">
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-1 mb-8">
-              <input
-                type="text"
-                placeholder="Accéder à un projet, voir ma pré-AC, vérifier mon planning..."
-                className="w-full px-6 py-4 bg-transparent text-white placeholder-white/50 outline-none text-center"
-                style={{ fontFamily: 'Nunito Sans' }}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {demoAccounts.map((account) => (
-                <Link key={account.role} href={account.link}>
-                  <button className="w-full px-4 py-3 text-sm bg-white/10 hover:bg-white/20 border border-white/20 hover:border-lime/50 text-white rounded-lg transition-all" style={{ fontFamily: 'Nunito Sans' }}>
-                    {account.role === 'cdp' && '📊 '}
-                    {account.role === 'candidate' && '🎯 '}
-                    {account.role === 'assessor' && '👥 '}
-                    {account.name === 'Gestionnaire de projets' ? 'Gérer mes projets' : account.name === 'Candidat' ? 'Ma pré-AC' : 'Mes sessions'}
-                  </button>
-                </Link>
-              ))}
-              <Link href="#scroll">
-                <button className="col-span-2 md:col-span-1 px-4 py-3 text-sm bg-lime text-navy hover:bg-lime/90 font-medium rounded-lg transition-all" style={{ fontFamily: 'Nunito Sans' }}>
-                  ↓ En savoir plus
+          {/* CTA Buttons */}
+          <div className="flex flex-wrap justify-center gap-3 mb-16">
+            {demoAccounts.map((account) => (
+              <Link key={account.role} href={account.link}>
+                <button className="px-6 py-2 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 text-white rounded-full text-sm transition" style={{ fontFamily: 'Nunito Sans' }}>
+                  {account.name}
                 </button>
               </Link>
-            </div>
+            ))}
           </div>
 
-          {/* Features Grid */}
-          <div id="scroll" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur">
-              <span className="text-2xl mb-3 block">📋</span>
-              <h3 className="font-bold mb-2" style={{ fontFamily: 'Jost' }}>Pré-AC</h3>
-              <p className="text-xs text-white/60" style={{ fontFamily: 'Nunito Sans' }}>Hogan, questionnaires</p>
+          {/* Features */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div>
+              <p className="text-2xl mb-2">📋</p>
+              <h3 className="text-sm font-medium text-white mb-1">Pré-AC</h3>
+              <p className="text-xs text-white/50">Hogan, questionnaires</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur">
-              <span className="text-2xl mb-3 block">⏱️</span>
-              <h3 className="font-bold mb-2" style={{ fontFamily: 'Jost' }}>Jour J</h3>
-              <p className="text-xs text-white/60" style={{ fontFamily: 'Nunito Sans' }}>Exercices, timers</p>
+            <div>
+              <p className="text-2xl mb-2">⏱️</p>
+              <h3 className="text-sm font-medium text-white mb-1">Jour J</h3>
+              <p className="text-xs text-white/50">Exercices, timers</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur">
-              <span className="text-2xl mb-3 block">👁️</span>
-              <h3 className="font-bold mb-2" style={{ fontFamily: 'Jost' }}>Assesseurs</h3>
-              <p className="text-xs text-white/60" style={{ fontFamily: 'Nunito Sans' }}>Grilles, observation</p>
+            <div>
+              <p className="text-2xl mb-2">👁️</p>
+              <h3 className="text-sm font-medium text-white mb-1">Assesseurs</h3>
+              <p className="text-xs text-white/50">Préparation, observation</p>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur">
-              <span className="text-2xl mb-3 block">💬</span>
-              <h3 className="font-bold mb-2" style={{ fontFamily: 'Jost' }}>Débrief</h3>
-              <p className="text-xs text-white/60" style={{ fontFamily: 'Nunito Sans' }}>Retours candidat</p>
+            <div>
+              <p className="text-2xl mb-2">💬</p>
+              <h3 className="text-sm font-medium text-white mb-1">Débrief</h3>
+              <p className="text-xs text-white/50">Retours candidat</p>
             </div>
-          </div>
-
-          {/* Demo Notice */}
-          <div className="text-center text-xs text-white/50">
-            <p>Mode démo • Toutes les données sont fictives • Cliquez sur un bouton ci-dessus pour explorer</p>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-8 py-8 text-center text-xs text-white/50">
-          <p className="mb-2">© Authentic Talent Consulting · Plateforme ATC Journey</p>
-          <a href="mailto:contact@authentictalent.fr" className="text-lime hover:text-lime/80 transition-colors">
-            contact@authentictalent.fr
-          </a>
-        </div>
+      <footer className="border-t border-white/10 px-8 py-8 text-center text-xs text-white/50">
+        <p className="mb-2">© Authentic Talent Consulting · ATC Journey</p>
+        <a href="mailto:contact@authentictalent.fr" className="text-[#D1DA8F] hover:text-white transition">
+          contact@authentictalent.fr
+        </a>
       </footer>
     </div>
   )
