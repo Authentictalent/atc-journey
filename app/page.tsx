@@ -10,9 +10,12 @@ export default function LoginPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-navy/5 via-white to-teal/5 flex flex-col relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-lime/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
       {/* Header */}
-      <header className="border-b border-slate-200/50 bg-white/80 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-navy" style={{ fontFamily: 'Jost' }}>
@@ -27,7 +30,7 @@ export default function LoginPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-2xl">
           {/* Hero Section */}
           <div className="text-center mb-16">
@@ -119,7 +122,7 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/50 bg-white/50 backdrop-blur-sm">
+      <footer className="relative z-10 border-t border-slate-200/50 bg-white/50 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-slate-500">
           <p className="mb-2">© Authentic Talent Consulting · Plateforme ATC Journey</p>
           <a href="mailto:contact@authentictalent.fr" className="text-navy hover:underline">
