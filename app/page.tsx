@@ -2,33 +2,48 @@
 
 import Link from 'next/link'
 
-export default function LoginPage() {
+export default function HomePage() {
   const demoAccounts = [
-    { role: 'cdp', name: 'Gestionnaire de projets', email: 'cdp@authentictalent.fr', link: '/dashboard' },
-    { role: 'candidate', name: 'Candidat', email: 'candidate@demo.fr', link: '/candidate/pre-ac' },
-    { role: 'assessor', name: 'Assesseur', email: 'assessor@demo.fr', link: '/assessor/dashboard' },
+    { role: 'cdp', name: 'Cheffe de Projet', email: 'cdp@authentictalent.fr', link: '/dashboard', icon: '👨‍💼' },
+    { role: 'candidate', name: 'Candidat', email: 'candidate@demo.fr', link: '/candidate/pre-ac', icon: '🎯' },
+    { role: 'assessor', name: 'Lead Assesseur', email: 'assessor@demo.fr', link: '/assessor/dashboard', icon: '📊' },
   ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f5f0] flex flex-col">
       {/* Header */}
-      <header className="bg-[#1a1a1a] text-white px-8 py-4 border-b border-white/10">
+      <header className="bg-[#0d1520] text-white px-6 md:px-8 py-3 border-b border-white/5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <h1 className="text-lg font-bold" style={{ fontFamily: 'Jost' }}>
-              ATC Journey
-            </h1>
-            <nav className="hidden md:flex gap-8 text-sm">
-              <button className="hover:text-lime transition">Pré-AC</button>
-              <button className="hover:text-lime transition">Jour J</button>
-              <button className="hover:text-lime transition">Assesseurs</button>
-              <button className="hover:text-lime transition">Débrief</button>
-            </nav>
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#d1da8f] rounded-lg flex items-center justify-center font-bold text-[#0d1520] text-sm">
+              ATC
+            </div>
+            <div>
+              <div className="text-sm font-semibold" style={{ fontFamily: 'Jost' }}>
+                ATC Journey
+              </div>
+              <div className="text-xs text-white/50">Make your talent shine</div>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <input type="text" placeholder="Chercher..." className="bg-white/10 border border-white/20 px-4 py-2 rounded-full text-sm placeholder-white/50 text-white w-40" />
-            <Link href="#login">
-              <button className="bg-[#D1DA8F] text-black px-6 py-2 rounded-full font-medium text-sm hover:bg-[#c5cc7a] transition">
+
+          {/* Nav */}
+          <nav className="hidden md:flex gap-6 text-sm">
+            <button className="text-white/70 hover:text-white transition">Pré-AC</button>
+            <button className="text-white/70 hover:text-white transition">Jour J</button>
+            <button className="text-white/70 hover:text-white transition">Assesseurs</button>
+          </nav>
+
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            <button className="text-white/70 hover:text-white transition">
+              <span className="text-lg">🔍</span>
+            </button>
+            <button className="text-white/70 hover:text-white transition text-sm">
+              EN
+            </button>
+            <Link href="/dashboard">
+              <button className="bg-[#d1da8f] text-[#0d1520] px-5 py-2 rounded-full font-semibold text-sm hover:bg-[#c5cc7a] transition">
                 Se connecter
               </button>
             </Link>
@@ -36,55 +51,118 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative flex items-center justify-center min-h-[calc(100vh-80px)] px-8 py-16">
-        {/* Decorative shapes */}
-        <div className="absolute top-20 right-20 w-32 h-16 border-2 border-black/10 rounded-full pointer-events-none" />
-        <div className="absolute bottom-20 left-20 w-32 h-16 border-2 border-black/10 rounded-full pointer-events-none" />
+      {/* Main */}
+      <main className="flex-1 relative flex items-center justify-center px-4 py-12 md:py-20">
+        {/* Decorative circles */}
+        <div className="absolute top-16 right-12 w-24 h-24 border-2 border-[#d1da8f]/20 rounded-full pointer-events-none hidden md:block" />
+        <div className="absolute bottom-20 left-12 w-20 h-20 border-2 border-[#d1da8f]/15 rounded-full pointer-events-none hidden md:block" />
 
         {/* Content */}
-        <div className="max-w-md w-full">
+        <div className="w-full max-w-2xl relative z-10">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="text-sm font-medium text-black mb-1" style={{ fontFamily: 'Jost' }}>
-              ATC Journey
+          <div className="mb-10 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-[#d1da8f] rounded-lg" />
+              <span className="text-xs font-semibold text-[#0d1520]" style={{ fontFamily: 'Jost' }}>
+                AUTHENTIC TALENT CONSULTING
+              </span>
             </div>
-            <p className="text-xs text-gray-500">Make your talent shine</p>
           </div>
 
           {/* Heading */}
-          <h2 className="text-3xl font-bold text-black mb-3" style={{ fontFamily: 'Jost' }}>
-            La plateforme<br />des Assessment Centers.
-          </h2>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#0d1520] mb-4 leading-tight text-center md:text-left" style={{ fontFamily: 'Jost' }}>
+            La plateforme<br />des Assessment Centers
+          </h1>
 
           {/* Subtitle */}
-          <p className="text-sm text-gray-600 mb-8" style={{ fontFamily: 'Nunito Sans' }}>
-            Réservé à tous les acteurs de l'Assessment Center par Authentic Talent Consulting.
+          <p className="text-base md:text-lg text-[#666] mb-10 leading-relaxed text-center md:text-left max-w-xl">
+            Gérez vos évaluations de bout en bout : de la pré-AC au feedback, tout en un seul endroit.
           </p>
 
-          {/* Demo Accounts */}
-          <div className="space-y-4 mb-8">
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">ACCÈS DÉMO</div>
-            {demoAccounts.map((account) => (
-              <Link key={account.role} href={account.link}>
-                <div className="p-4 border border-gray-200 rounded-lg hover:border-[#D1DA8F] hover:bg-yellow-50/50 transition cursor-pointer">
-                  <p className="font-medium text-black text-sm">{account.name}</p>
-                  <p className="text-xs text-gray-500 mt-1">{account.email}</p>
-                </div>
-              </Link>
-            ))}
+          {/* Demo Section */}
+          <div className="mb-8">
+            <div className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-4 text-center md:text-left">
+              Accès démo
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {demoAccounts.map((account) => (
+                <Link key={account.role} href={account.link}>
+                  <div className="group p-5 bg-white border border-[#ddd] rounded-xl hover:border-[#d1da8f] hover:shadow-md transition cursor-pointer h-full">
+                    <div className="text-2xl mb-3">{account.icon}</div>
+                    <p className="font-semibold text-[#0d1520] text-sm mb-1">
+                      {account.name}
+                    </p>
+                    <p className="text-xs text-[#999]">
+                      {account.email}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Footer text */}
-          <p className="text-xs text-gray-500 text-center">
-            Mode démo · Les données sont fictives
+          <p className="text-xs text-[#999] text-center md:text-left">
+            Mode démo · Les données sont fictives · Accès via liste des certifiés
           </p>
         </div>
       </main>
 
-      {/* Bottom Footer */}
-      <footer className="border-t border-gray-200 px-8 py-6 text-center text-xs text-gray-500">
-        © Authentic Talent Consulting · ATC Journey
+      {/* Footer */}
+      <footer className="border-t border-[#ddd] bg-white px-6 md:px-8 py-8 mt-auto">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 bg-[#d1da8f] rounded-lg" />
+                <span className="text-sm font-semibold text-[#0d1520]">ATC Journey</span>
+              </div>
+              <p className="text-xs text-[#999]">
+                La plateforme de gestion des Assessment Centers par Authentic Talent Consulting.
+              </p>
+            </div>
+
+            {/* Support */}
+            <div>
+              <p className="text-xs font-semibold text-[#0d1520] mb-3 uppercase">Support</p>
+              <ul className="space-y-2 text-xs text-[#666]">
+                <li><Link href="#" className="hover:text-[#0d1520]">Support</Link></li>
+                <li><Link href="#" className="hover:text-[#0d1520]">FAQ</Link></li>
+                <li><Link href="#" className="hover:text-[#0d1520]">Documentation</Link></li>
+              </ul>
+            </div>
+
+            {/* Product */}
+            <div>
+              <p className="text-xs font-semibold text-[#0d1520] mb-3 uppercase">Produit</p>
+              <ul className="space-y-2 text-xs text-[#666]">
+                <li><Link href="#" className="hover:text-[#0d1520]">Fonctionnalités</Link></li>
+                <li><Link href="#" className="hover:text-[#0d1520]">Tarification</Link></li>
+                <li><Link href="#" className="hover:text-[#0d1520]">Roadmap</Link></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <p className="text-xs font-semibold text-[#0d1520] mb-3 uppercase">Entreprise</p>
+              <ul className="space-y-2 text-xs text-[#666]">
+                <li><Link href="https://www.authentictalent.fr" target="_blank" className="hover:text-[#0d1520]">authentictalent.fr</Link></li>
+                <li><Link href="#" className="hover:text-[#0d1520]">À propos</Link></li>
+                <li><Link href="#" className="hover:text-[#0d1520]">Mentions légales</Link></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-[#ddd] pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-[#999]">
+            <p>© Authentic Talent Consulting · ATC Journey</p>
+            <div className="flex gap-4 mt-4 md:mt-0">
+              <Link href="#" className="hover:text-[#0d1520]">Confidentialité</Link>
+              <Link href="#" className="hover:text-[#0d1520]">Conditions</Link>
+              <Link href="#" className="hover:text-[#0d1520]">Cookies</Link>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   )
