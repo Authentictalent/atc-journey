@@ -1,143 +1,183 @@
 'use client'
 
-import { Card } from '@/app/components/Card'
-import { Badge, Button, Progress } from '@/app/components/UI'
+import Link from 'next/link'
+import { useState } from 'react'
 
-const assessmentSessions = [
-  {
-    id: '1',
-    clientName: 'Sanofi',
-    position: 'Directeur Opérations',
-    date: 'Mardi 15 avril, 9h-12h',
-    location: 'Zoom + MS Teams',
-    role: 'Lead Assessor',
-    candidates: 3,
-    preparedCount: 2,
-    status: 'ready',
-    actionNeeded: 'Vérifier notes du 2ème candidat',
-  },
-  {
-    id: '2',
-    clientName: 'LVMH',
-    position: 'Manager Ventes',
-    date: 'Jeudi 17 avril, 14h-16h30',
-    location: 'Paris (42 rue des Invalides)',
-    role: 'Assessor',
-    candidates: 1,
-    preparedCount: 0,
-    status: 'preparing',
-    actionNeeded: 'Lire profil candidat et briefing exercices',
-  },
-  {
-    id: '3',
-    clientName: 'Carrefour',
-    position: 'Chef Projet',
-    date: 'Mercredi 29 août, 14h-17h',
-    location: 'Bordeaux (HQ)',
-    role: 'Assessor',
-    candidates: 2,
-    preparedCount: 2,
-    status: 'completed',
-    actionNeeded: 'Rien',
-  },
-]
+type SessionStatus = 'upcoming' | 'in-progress' | 'completed'
 
-const getStatusColor = (status: string) => {
-  if (status === 'ready') return 'bg-teal/10 border-teal/30'
-  if (status === 'preparing') return 'bg-lime/10 border-lime/30'
-  return 'bg-gray-100 border-gray-300'
+interface Session {
+  id: string
+  projectName: string
+  position: string
+  candidateName: string
+  startTime: string
+  status: SessionStatus
+  exerciseCount: number
+  notesProgress: number
 }
 
 export default function AssessorDashboard() {
+  const [filter, setFilter] = useState<SessionStatus | 'all'>('all')
+
+  const sessions: Session[] = [
+    {
+      id: '1',
+      projectName: 'Sanofi',
+      position: 'Directeur Opérations',
+      candidateName: 'Jean Dupont',
+      startTime: '15 avril, 9h00',
+      status: 'upcoming',
+      exerciseCount: 3,
+      notesProgress: 0,
+    },
+    {
+      id: '2',
+      projectName: 'Sanofi',
+      position: 'Directeur Opérations',
+      candidateName: 'Marie Martin',
+      startTime: '15 avril, 10h00',
+      status: 'upcoming',
+      exerciseCount: 3,
+      notesProgress: 0,
+    },
+    {
+      id: '3',
+      projectName: 'LVMH',
+      position: 'Manager Ventes',
+      candidateName: 'Pierre Bernard',
+      startTime: '22 août, 14h00',
+      status: 'upcoming',
+      exerciseCount: 2,
+      notesProgress: 0,
+    },
+  ]
+
+  const filteredSessions = sessions.filter((s) => filter === 'all' || s.status === filter)
+
+  const statusConfig = {
+    upcoming: { label: 'À venir', color: 'bg-[#eba687]/10 text-[#eba687] border-[#eba687]/20' },
+    'in-progress': { label: 'En cours', color: 'bg-[#61a4b0]/10 text-[#61a4b0] border-[#61a4b0]/20' },
+    completed: { label: 'Terminé', color: 'bg-[#d1da8f]/10 text-[#d1da8f] border-[#d1da8f]/20' },
+  }
+
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-navy mb-2">Assesseur</h1>
-            <p className="text-text-secondary">Tes sessions d'Assessment Center</p>
+    <div className="min-h-screen bg-[#f5f5f0]">
+      {/* Header */}
+      <header className="bg-[#0d1520] text-white px-6 md:px-8 py-3 border-b border-white/5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80">
+            <div className="w-10 h-10 bg-[#d1da8f] rounded-lg flex items-center justify-center font-bold text-[#0d1520] text-sm">
+              ATC
+            </div>
+            <div>
+              <div className="text-sm font-semibold" style={{ fontFamily: 'Jost' }}>
+                ATC Journey
+              </div>
+              <div className="text-xs text-white/50">Lead Assesseur</div>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <button className="text-white/70 hover:text-white transition">👤 Sophie Durand</button>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-text-secondary">Sophie Durand</p>
-            <p className="text-xs text-text-secondary">Assessor Sénior</p>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main className="px-4 md:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-[#0d1520] mb-2" style={{ fontFamily: 'Jost' }}>
+              Mes évaluations
+            </h1>
+            <p className="text-[#666]">Gérez vos sessions du jour J en temps réel</p>
+          </div>
+
+          {/* Filters */}
+          <div className="mb-8 flex gap-3">
+            {(['all', 'upcoming', 'in-progress', 'completed'] as const).map((status) => {
+              const labels = {
+                all: 'Tous',
+                upcoming: 'À venir',
+                'in-progress': 'En cours',
+                completed: 'Terminés',
+              }
+              return (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                    filter === status
+                      ? 'bg-[#0d1520] text-white'
+                      : 'bg-white border border-[#ddd] text-[#0d1520] hover:border-[#d1da8f]'
+                  }`}
+                >
+                  {labels[status]}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Sessions Grid */}
+          <div className="space-y-4">
+            {filteredSessions.length === 0 ? (
+              <div className="text-center py-12 text-[#999]">
+                <p className="text-sm">Aucune session dans cette catégorie</p>
+              </div>
+            ) : (
+              filteredSessions.map((session) => {
+                const status = statusConfig[session.status]
+                return (
+                  <Link key={session.id} href={`/assessor/session/${session.id}`}>
+                    <div className="group bg-white border border-[#ddd] rounded-lg p-6 hover:border-[#d1da8f] hover:shadow-md transition cursor-pointer">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-[#0d1520]">
+                            {session.projectName} — {session.position}
+                          </h3>
+                          <p className="text-sm text-[#666] mt-1">
+                            Candidat: <span className="font-semibold">{session.candidateName}</span>
+                          </p>
+                        </div>
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${status.color}`}>
+                          {status.label}
+                        </span>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div>
+                          <p className="text-xs text-[#999] mb-1">Date & heure</p>
+                          <p className="text-sm font-semibold text-[#0d1520]">{session.startTime}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#999] mb-1">Exercices</p>
+                          <p className="text-sm font-semibold text-[#0d1520]">{session.exerciseCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[#999] mb-1">Notes</p>
+                          <div className="w-full h-2 bg-[#ddd] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#d1da8f] transition-all"
+                              style={{ width: `${session.notesProgress}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CTA */}
+                      <p className="text-xs text-[#0d1520] font-semibold hover:text-[#d1da8f] transition">
+                        Accéder à la session →
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })
+            )}
           </div>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <Card className="text-center">
-            <p className="text-3xl font-bold text-navy">3</p>
-            <p className="text-sm text-text-secondary mt-2">Sessions prévues</p>
-          </Card>
-          <Card className="text-center">
-            <p className="text-3xl font-bold text-teal">2</p>
-            <p className="text-sm text-text-secondary mt-2">Sessions prêtes</p>
-          </Card>
-          <Card className="text-center">
-            <p className="text-3xl font-bold text-lime">6</p>
-            <p className="text-sm text-text-secondary mt-2">Candidats totaux</p>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b border-border-color">
-          <button className="px-4 py-3 text-navy font-medium border-b-2 border-navy">À venir</button>
-          <button className="px-4 py-3 text-text-secondary">Complétées</button>
-        </div>
-
-        {/* Sessions */}
-        <div className="space-y-4">
-          {assessmentSessions.map((session) => (
-            <Card
-              key={session.id}
-              className={`hover:shadow-lg transition-shadow ${getStatusColor(session.status)}`}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-navy">
-                    {session.clientName} — {session.position}
-                  </h3>
-                  <p className="text-sm text-text-secondary mt-1">{session.date}</p>
-                  <p className="text-sm text-text-secondary">📍 {session.location}</p>
-                </div>
-                <div className="text-right">
-                  <Badge status={session.status === 'completed' ? 'completed' : session.status === 'ready' ? 'active' : 'pending'} />
-                  <p className="text-xs text-text-secondary mt-2">{session.role}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 mb-4 text-sm border-t border-border-color pt-4">
-                <div>
-                  <p className="text-text-secondary">Candidats</p>
-                  <p className="font-medium text-navy">{session.candidates}</p>
-                </div>
-                <div>
-                  <p className="text-text-secondary">Préparés</p>
-                  <Progress items={[{ done: session.preparedCount, total: session.candidates }]} />
-                </div>
-                <div>
-                  <p className="text-text-secondary">Action</p>
-                  <p className="font-medium text-navy text-xs">{session.actionNeeded}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                {session.status === 'ready' && (
-                  <Button variant="primary">Débuter la session</Button>
-                )}
-                {session.status === 'preparing' && (
-                  <Button variant="secondary">Se préparer</Button>
-                )}
-                {session.status === 'completed' && (
-                  <Button variant="tertiary">Voir rapport</Button>
-                )}
-                <Button variant="tertiary">Détails</Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
+      </main>
     </div>
   )
 }
