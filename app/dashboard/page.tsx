@@ -16,227 +16,162 @@ interface Project {
   candidates: number
   preAcDone: number
   preAcTotal: number
-  assessorsReady: boolean
-  actionNeeded?: string
 }
 
 const projects: Project[] = [
   {
     id: '1',
-    type: 'light',
+    type: 'robuste',
     clientName: 'Sanofi',
-    position: 'Directeur Opérations',
+    position: 'Director of Operations',
     status: 'active',
-    acDate: 'Mardi 15 avril, 10h30',
+    acDate: 'Tue, April 15',
     candidates: 3,
     preAcDone: 2,
     preAcTotal: 3,
-    assessorsReady: true,
-    actionNeeded: 'Assignation second assesseur',
   },
   {
     id: '2',
-    type: 'robuste',
+    type: 'premium',
     clientName: 'LVMH',
-    position: 'Manager Ventes',
-    status: 'pending',
-    acDate: '22 août (TBC)',
-    candidates: 1,
-    preAcDone: 0,
-    preAcTotal: 1,
-    assessorsReady: false,
-    actionNeeded: 'Créer planning',
+    position: 'VP Marketing',
+    status: 'active',
+    acDate: 'April 22',
+    candidates: 2,
+    preAcDone: 1,
+    preAcTotal: 2,
   },
   {
     id: '3',
-    type: 'premium',
+    type: 'light',
     clientName: 'Carrefour',
-    position: 'Chef Projet',
-    status: 'completed',
-    acDate: 'Mercredi 29 août, 14h-17h',
-    candidates: 2,
-    preAcDone: 2,
-    preAcTotal: 2,
-    assessorsReady: true,
+    position: 'Project Manager',
+    status: 'pending',
+    acDate: 'May 2026',
+    candidates: 1,
+    preAcDone: 0,
+    preAcTotal: 1,
   },
 ]
 
-const statusConfig = {
-  active: { label: 'Actif', bg: 'bg-teal/10', border: 'border-teal/20', text: 'text-teal' },
-  pending: { label: 'En attente', bg: 'bg-salmon/10', border: 'border-salmon/20', text: 'text-salmon' },
-  completed: { label: 'Complété', bg: 'bg-lime/10', border: 'border-lime/20', text: 'text-lime' },
+const typeColors = {
+  light: 'bg-blue-50 text-blue-700 border-blue-200',
+  robuste: 'bg-purple-50 text-purple-700 border-purple-200',
+  premium: 'bg-amber-50 text-amber-700 border-amber-200',
 }
 
-const typeConfig = {
-  light: { label: 'AC Light', color: 'bg-blue-100 text-blue-700' },
-  robuste: { label: 'AC Robuste', color: 'bg-purple-100 text-purple-700' },
-  premium: { label: 'AC Premium', color: 'bg-amber-100 text-amber-700' },
+const statusColors = {
+  active: 'text-green-700',
+  pending: 'text-amber-700',
+  completed: 'text-gray-700',
 }
 
 export default function DashboardPage() {
-  const [filter, setFilter] = useState<'all' | 'light' | 'robuste' | 'premium'>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | ProjectStatus>('all')
+  const [filter, setFilter] = useState<'all' | ProjectType>('all')
 
-  const filteredProjects = projects.filter((p) => {
-    if (filter !== 'all' && p.type !== filter) return false
-    if (statusFilter !== 'all' && p.status !== statusFilter) return false
-    return true
-  })
+  const filtered = projects.filter(p => filter === 'all' || p.type === filter)
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0]">
+    <div className="min-h-screen bg-off-white">
       {/* Header */}
-      <header className="bg-[#0d1520] text-white px-6 md:px-8 py-3 border-b border-white/5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#d1da8f] rounded-lg flex items-center justify-center font-bold text-[#0d1520] text-sm">
-              ATC
+      <header className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-navy rounded-lg flex items-center justify-center">
+              <span className="text-lime font-bold text-sm" style={{ fontFamily: 'Jost' }}>ATC</span>
             </div>
             <div>
-              <div className="text-sm font-semibold" style={{ fontFamily: 'Jost' }}>
-                ATC Journey
-              </div>
-              <div className="text-xs text-white/50">Make your talent shine</div>
+              <div className="text-sm font-bold text-navy" style={{ fontFamily: 'Jost' }}>ATC Journey</div>
+              <div className="text-xs text-gray-500">Projects</div>
             </div>
-          </div>
+          </Link>
 
-          <nav className="hidden md:flex gap-6 text-sm flex-1 justify-center">
-            <button className="text-white/70 hover:text-white transition">Mes projets</button>
-            <button className="text-white/70 hover:text-white transition">Calendrier</button>
-            <button className="text-white/70 hover:text-white transition">Ressources</button>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <button className="text-white/70 hover:text-white transition">👤</button>
+          <div className="flex gap-3">
+            <button className="text-sm text-gray-600 hover:text-navy transition">Settings</button>
             <Link href="/">
-              <button className="bg-[#d1da8f] text-[#0d1520] px-4 py-1.5 rounded-full font-semibold text-xs hover:bg-[#c5cc7a] transition">
-                Accueil
-              </button>
+              <button className="text-sm text-gray-600 hover:text-navy transition">Home</button>
             </Link>
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="px-4 md:px-8 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-[#0d1520] mb-2" style={{ fontFamily: 'Jost' }}>
-              Mes projets
-            </h1>
-            <p className="text-[#666]">Gérez vos Assessment Centers en toute sérénité</p>
-          </div>
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        {/* Page Header */}
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold text-navy mb-2" style={{ fontFamily: 'Jost' }}>Your Projects</h1>
+          <p className="text-gray-600">Manage and track all assessment centers</p>
+        </div>
 
-          {/* Controls */}
-          <div className="mb-8 space-y-4">
-            {/* Search & Type Filter */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <input
-                type="text"
-                placeholder="🔍 Rechercher un projet..."
-                className="flex-1 px-4 py-2.5 rounded-lg border border-[#ddd] bg-white text-[#0d1520] placeholder-[#999] text-sm"
-              />
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as typeof filter)}
-                className="px-4 py-2.5 rounded-lg border border-[#ddd] bg-white text-[#0d1520] text-sm"
-              >
-                <option value="all">Tous les types</option>
-                <option value="light">AC Light</option>
-                <option value="robuste">AC Robuste</option>
-                <option value="premium">AC Premium</option>
-              </select>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                className="px-4 py-2.5 rounded-lg border border-[#ddd] bg-white text-[#0d1520] text-sm"
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="active">Actif</option>
-                <option value="pending">En attente</option>
-                <option value="completed">Complété</option>
-              </select>
-            </div>
-          </div>
+        {/* Filters */}
+        <div className="mb-8 flex gap-3">
+          {(['all', 'light', 'robuste', 'premium'] as const).map(type => (
+            <button
+              key={type}
+              onClick={() => setFilter(type)}
+              className={`px-4 py-2 text-sm rounded-lg font-medium transition ${
+                filter === type
+                  ? 'bg-navy text-lime'
+                  : 'bg-white border border-gray-200 text-gray-700 hover:border-lime'
+              }`}
+            >
+              {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+          ))}
+        </div>
 
-          {/* Projects Grid */}
-          <div className="space-y-4">
-            {filteredProjects.length === 0 ? (
-              <div className="text-center py-12 text-[#999]">
-                <p className="text-sm">Aucun projet ne correspond à vos filtres</p>
-              </div>
-            ) : (
-              filteredProjects.map((project) => {
-                const status = statusConfig[project.status]
-                const type = typeConfig[project.type]
-                const preAcPercent = Math.round((project.preAcDone / project.preAcTotal) * 100)
-
-                return (
-                  <Link key={project.id} href={`/project/${project.id}`}>
-                    <div className="group bg-white border border-[#ddd] rounded-xl p-6 hover:border-[#d1da8f] hover:shadow-md transition-all cursor-pointer">
-                      {/* Header row */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${type.color}`}>
-                              {type.label}
-                            </span>
-                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${status.bg} ${status.text}`}>
-                              {status.label}
-                            </span>
-                          </div>
-                          <h3 className="text-lg font-bold text-[#0d1520]">
-                            {project.clientName} — {project.position}
-                          </h3>
-                          <p className="text-sm text-[#666] mt-1">📅 {project.acDate}</p>
-                        </div>
+        {/* Projects */}
+        <div className="space-y-4">
+          {filtered.map(project => {
+            const preAcPercent = Math.round((project.preAcDone / project.preAcTotal) * 100)
+            return (
+              <Link key={project.id} href={`/project/${project.id}`}>
+                <div className="p-6 bg-white border border-gray-200 rounded-2xl hover:border-lime hover:shadow-lg transition cursor-pointer">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-lg border ${typeColors[project.type]}`}>
+                          {project.type.charAt(0).toUpperCase() + project.type.slice(1)}
+                        </span>
+                        <span className={`text-xs font-semibold ${statusColors[project.status]}`}>
+                          {project.status === 'active' ? '● Active' : project.status === 'pending' ? '● Pending' : '✓ Completed'}
+                        </span>
                       </div>
-
-                      {/* Stats grid */}
-                      <div className="grid grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-[#999] mb-1">Candidats</p>
-                          <p className="text-xl font-bold text-[#0d1520]">{project.candidates}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-[#999] mb-1">Pré-AC</p>
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-1.5 bg-[#ddd] rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-[#d1da8f] rounded-full transition-all"
-                                style={{ width: `${preAcPercent}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-semibold text-[#0d1520]">{preAcPercent}%</span>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-xs text-[#999] mb-1">Assesseurs</p>
-                          <p className="text-sm font-semibold" style={{ color: project.assessorsReady ? '#61a4b0' : '#eba687' }}>
-                            {project.assessorsReady ? '✅ Prêt' : '⏳ À assigner'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-[#999] mb-1">Status</p>
-                          <p className="text-sm font-semibold text-[#0d1520]">Voir plus →</p>
-                        </div>
-                      </div>
-
-                      {/* Action alert */}
-                      {project.actionNeeded && (
-                        <div className="p-3 rounded-lg bg-[#eba687]/10 border border-[#eba687]/20">
-                          <p className="text-sm text-[#0d1520]">
-                            <span className="font-semibold">⚠️ Action requise:</span> {project.actionNeeded}
-                          </p>
-                        </div>
-                      )}
+                      <h3 className="text-lg font-bold text-navy">
+                        {project.clientName} · {project.position}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">📅 {project.acDate}</p>
                     </div>
-                  </Link>
-                )
-              })
-            )}
-          </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Candidates</p>
+                      <p className="text-lg font-bold text-navy">{project.candidates}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-2">Pre-AC Progress</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-lime" style={{ width: `${preAcPercent}%` }} />
+                        </div>
+                        <span className="text-xs font-semibold text-navy">{preAcPercent}%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Details</p>
+                      <p className="text-sm font-semibold text-navy hover:text-lime transition">View →</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Team</p>
+                      <p className="text-sm font-semibold text-navy">{project.candidates} people</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </main>
     </div>

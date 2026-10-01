@@ -7,24 +7,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: "#002446",
+        navy: "#0d1520",
         lime: "#d1da8f",
         teal: "#61a4b0",
         salmon: "#eba687",
-        "off-white": "#f6f6f2",
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        "card-bg": "var(--card-bg)",
-        "border-color": "var(--border-color)",
-        "text-secondary": "var(--text-secondary)",
+        "off-white": "#f5f5f0",
       },
       fontFamily: {
         sans: ["'Nunito Sans'", "sans-serif"],
         serif: ["'Jost'", "sans-serif"],
-      },
-      borderRadius: {
-        xl: "10px",
-        "2xl": "14px",
       },
     },
   },
