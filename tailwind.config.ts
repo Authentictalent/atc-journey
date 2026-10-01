@@ -7,7 +7,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: "#0d1520",
+        navy: "#002446",
         lime: "#d1da8f",
         teal: "#61a4b0",
         salmon: "#eba687",

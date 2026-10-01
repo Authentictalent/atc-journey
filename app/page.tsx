@@ -63,7 +63,7 @@ export default function HomePage() {
                   e.currentTarget.style.boxShadow = 'none'
                 }}>
                   <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{role.icon}</div>
-                  <h3 style={{ fontWeight: 'bold', color: '#0d1520', marginBottom: '0.25rem' }}>{role.name}</h3>
+                  <h3 style={{ fontWeight: 'bold', color: '#002446', marginBottom: '0.25rem' }}>{role.name}</h3>
                   <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{role.email}</p>
                 </div>
               </Link>
