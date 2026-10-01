@@ -3,170 +3,184 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-type ProjectType = 'light' | 'robuste' | 'premium'
-type ProjectStatus = 'active' | 'pending' | 'completed'
-
 interface Project {
   id: string
-  type: ProjectType
-  clientName: string
+  name: string
   position: string
-  status: ProjectStatus
-  acDate: string
+  date: string
+  status: 'active' | 'pending' | 'completed'
   candidates: number
-  preAcDone: number
-  preAcTotal: number
 }
 
 const projects: Project[] = [
   {
     id: '1',
-    type: 'robuste',
-    clientName: 'Sanofi',
+    name: 'Sanofi',
     position: 'Director of Operations',
+    date: 'April 15, 2026',
     status: 'active',
-    acDate: 'Tue, April 15',
     candidates: 3,
-    preAcDone: 2,
-    preAcTotal: 3,
   },
   {
     id: '2',
-    type: 'premium',
-    clientName: 'LVMH',
+    name: 'LVMH',
     position: 'VP Marketing',
+    date: 'April 22, 2026',
     status: 'active',
-    acDate: 'April 22',
     candidates: 2,
-    preAcDone: 1,
-    preAcTotal: 2,
   },
   {
     id: '3',
-    type: 'light',
-    clientName: 'Carrefour',
+    name: 'Carrefour',
     position: 'Project Manager',
+    date: 'May 15, 2026',
     status: 'pending',
-    acDate: 'May 2026',
     candidates: 1,
-    preAcDone: 0,
-    preAcTotal: 1,
   },
 ]
 
-const typeColors = {
-  light: 'bg-blue-50 text-blue-700 border-blue-200',
-  robuste: 'bg-purple-50 text-purple-700 border-purple-200',
-  premium: 'bg-amber-50 text-amber-700 border-amber-200',
-}
-
-const statusColors = {
-  active: 'text-green-700',
-  pending: 'text-amber-700',
-  completed: 'text-gray-700',
+const statusLabels = {
+  active: { label: 'Active', color: '#10b981' },
+  pending: { label: 'Pending', color: '#f59e0b' },
+  completed: { label: 'Completed', color: '#6b7280' },
 }
 
 export default function DashboardPage() {
-  const [filter, setFilter] = useState<'all' | ProjectType>('all')
+  const [filter, setFilter] = useState<'all' | 'active' | 'pending' | 'completed'>('all')
 
-  const filtered = projects.filter(p => filter === 'all' || p.type === filter)
+  const filtered = projects.filter(p => filter === 'all' || p.status === filter)
 
   return (
-    <div className="min-h-screen bg-off-white">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f0', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-navy rounded-lg flex items-center justify-center">
-              <span className="text-lime font-bold text-sm" style={{ fontFamily: 'Jost' }}>ATC</span>
+      <header style={{ backgroundColor: '#002446', color: 'white', padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ textDecoration: 'none', color: 'white', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: 'white', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#002446', fontSize: '0.85rem' }}>
+              ATC
             </div>
             <div>
-              <div className="text-sm font-bold text-navy" style={{ fontFamily: 'Jost' }}>ATC Journey</div>
-              <div className="text-xs text-gray-500">Projects</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: '600', fontFamily: 'Jost, sans-serif' }}>ATC Journey</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Projects</div>
             </div>
           </Link>
 
-          <div className="flex gap-3">
-            <button className="text-sm text-gray-600 hover:text-navy transition">Settings</button>
-            <Link href="/">
-              <button className="text-sm text-gray-600 hover:text-navy transition">Home</button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button style={{ backgroundColor: 'transparent', border: 'none', color: 'white', cursor: 'pointer', fontSize: '0.9rem' }}>
+              Settings
+            </button>
+            <Link href="/" style={{ textDecoration: 'none' }}>
+              <button style={{
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.2)',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'
+              }}>
+                Home
+              </button>
             </Link>
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Page Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-navy mb-2" style={{ fontFamily: 'Jost' }}>Your Projects</h1>
-          <p className="text-gray-600">Manage and track all assessment centers</p>
+      <main style={{ flex: 1, padding: '2rem 1.5rem', maxWidth: '80rem', margin: '0 auto', width: '100%' }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#002446', marginBottom: '0.5rem', fontFamily: 'Jost, sans-serif' }}>
+            Projects
+          </h1>
+          <p style={{ color: '#666', fontSize: '0.95rem' }}>Manage your assessment centers</p>
         </div>
 
         {/* Filters */}
-        <div className="mb-8 flex gap-3">
-          {(['all', 'light', 'robuste', 'premium'] as const).map(type => (
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          {(['all', 'active', 'pending', 'completed'] as const).map(status => (
             <button
-              key={type}
-              onClick={() => setFilter(type)}
-              className={`px-4 py-2 text-sm rounded-lg font-medium transition ${
-                filter === type
-                  ? 'bg-navy text-lime'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:border-lime'
-              }`}
+              key={status}
+              onClick={() => setFilter(status)}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                fontSize: '0.85rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: filter === status ? '#002446' : 'white',
+                color: filter === status ? 'white' : '#002446',
+                borderBottom: filter === status ? '2px solid #d1da8f' : '1px solid #ddd',
+              }}
             >
-              {type === 'all' ? 'All' : type.charAt(0).toUpperCase() + type.slice(1)}
+              {status.charAt(0).toUpperCase() + status.slice(1)}
             </button>
           ))}
         </div>
 
-        {/* Projects */}
-        <div className="space-y-4">
+        {/* Projects Grid */}
+        <div style={{ display: 'grid', gap: '1rem' }}>
           {filtered.map(project => {
-            const preAcPercent = Math.round((project.preAcDone / project.preAcTotal) * 100)
+            const status = statusLabels[project.status]
             return (
-              <Link key={project.id} href={`/project/${project.id}`}>
-                <div className="p-6 bg-white border border-gray-200 rounded-2xl hover:border-lime hover:shadow-lg transition cursor-pointer">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className={`text-xs font-semibold px-3 py-1 rounded-lg border ${typeColors[project.type]}`}>
-                          {project.type.charAt(0).toUpperCase() + project.type.slice(1)}
-                        </span>
-                        <span className={`text-xs font-semibold ${statusColors[project.status]}`}>
-                          {project.status === 'active' ? '● Active' : project.status === 'pending' ? '● Pending' : '✓ Completed'}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-bold text-navy">
-                        {project.clientName} · {project.position}
+              <Link key={project.id} href={`/project/${project.id}`} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  backgroundColor: 'white',
+                  border: '1px solid #ddd',
+                  borderRadius: '0.75rem',
+                  padding: '1.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'start',
+                  justifyContent: 'space-between',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#d1da8f'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#ddd'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#002446', margin: 0 }}>
+                        {project.name}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1">📅 {project.acDate}</p>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        backgroundColor: status.color,
+                        color: 'white',
+                        fontWeight: '500',
+                      }}>
+                        {status.label}
+                      </span>
                     </div>
+                    <p style={{ fontSize: '0.9rem', color: '#666', margin: '0.25rem 0' }}>
+                      {project.position}
+                    </p>
+                    <p style={{ fontSize: '0.85rem', color: '#999', margin: '0.25rem 0' }}>
+                      📅 {project.date}
+                    </p>
                   </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-100">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Candidates</p>
-                      <p className="text-lg font-bold text-navy">{project.candidates}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-2">Pre-AC Progress</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-lime" style={{ width: `${preAcPercent}%` }} />
-                        </div>
-                        <span className="text-xs font-semibold text-navy">{preAcPercent}%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Details</p>
-                      <p className="text-sm font-semibold text-navy hover:text-lime transition">View →</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Team</p>
-                      <p className="text-sm font-semibold text-navy">{project.candidates} people</p>
-                    </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#002446', margin: 0 }}>
+                      {project.candidates}
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: '#999', margin: '0.25rem 0' }}>
+                      candidates
+                    </p>
                   </div>
                 </div>
               </Link>

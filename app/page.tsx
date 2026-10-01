@@ -4,95 +4,95 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-off-white">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f0', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <header className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-navy rounded-lg flex items-center justify-center">
-              <span className="text-lime font-bold text-sm" style={{ fontFamily: 'Jost' }}>ATC</span>
+      <header style={{ backgroundColor: '#002446', color: 'white', padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', backgroundColor: 'white', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#002446', fontSize: '0.85rem' }}>
+              ATC
             </div>
             <div>
-              <div className="text-sm font-bold text-navy" style={{ fontFamily: 'Jost' }}>ATC Journey</div>
-              <div className="text-xs text-gray-500">Assessment Platform</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: '600', fontFamily: 'Jost, sans-serif' }}>ATC Journey</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>Assessment Centers</div>
             </div>
           </div>
 
-          <Link href="/dashboard">
-            <button className="px-6 py-2 bg-navy text-lime rounded-lg font-semibold text-sm hover:bg-opacity-90 transition">
-              Start Demo
+          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+            <button style={{
+              backgroundColor: 'white',
+              color: '#002446',
+              border: 'none',
+              padding: '0.6rem 1.5rem',
+              borderRadius: '0.5rem',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+              Dashboard
             </button>
           </Link>
         </div>
       </header>
 
-      {/* Hero */}
-      <main className="max-w-4xl mx-auto px-6 py-24 text-center">
-        <h1 className="text-6xl font-bold text-navy mb-6 leading-tight" style={{ fontFamily: 'Jost' }}>
-          Assessment Centers Reimagined
-        </h1>
+      {/* Main */}
+      <main style={{ flex: 1, padding: '3rem 1.5rem', maxWidth: '80rem', margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: '48rem' }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 'bold', color: '#002446', marginBottom: '1rem', fontFamily: 'Jost, sans-serif' }}>
+            Assessment Centers Platform
+          </h1>
 
-        <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-          Modern platform for managing talent evaluations. From pre-assessment to feedback, everything in one place.
-        </p>
+          <p style={{ fontSize: '1rem', color: '#666', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+            Manage your talent evaluations from pre-assessment to feedback. Streamlined platform for project managers, candidates, and assessors.
+          </p>
 
-        {/* Demo Accounts */}
-        <div className="mb-16">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-8">Try these roles</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { icon: '📊', name: 'Project Lead', email: 'cdp@demo.fr', link: '/dashboard' },
-              { icon: '🎯', name: 'Candidate', email: 'candidate@demo.fr', link: '/candidate/pre-ac' },
-              { icon: '✍️', name: 'Assessor', email: 'assessor@demo.fr', link: '/assessor/dashboard' },
-            ].map((role) => (
-              <Link key={role.name} href={role.link}>
-                <div style={{
-                  padding: '2rem',
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '1rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#d1da8f'
-                  e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(209, 218, 143, 0.1)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#e5e7eb'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}>
-                  <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{role.icon}</div>
-                  <h3 style={{ fontWeight: 'bold', color: '#002446', marginBottom: '0.25rem' }}>{role.name}</h3>
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>{role.email}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="pt-20 border-t border-gray-200">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-12">What's inside</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: '📋', title: 'Progressive Planning', desc: 'Candidates discover exercises day-by-day' },
-              { icon: '⏱️', title: 'Live Assessments', desc: 'Real-time tracking and assessor notes' },
-              { icon: '📊', title: 'Smart Reports', desc: 'Comprehensive feedback & insights' },
-            ].map((f) => (
-              <div key={f.title} className="text-left">
-                <div className="text-4xl mb-4">{f.icon}</div>
-                <h3 className="font-bold text-navy mb-2" style={{ fontFamily: 'Jost' }}>{f.title}</h3>
-                <p className="text-sm text-gray-600">{f.desc}</p>
-              </div>
-            ))}
+          {/* Demo Roles */}
+          <div style={{ marginBottom: '2rem' }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: '600', color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>
+              Demo Access
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))', gap: '1rem' }}>
+              {[
+                { icon: '📊', name: 'Project Lead', href: '/dashboard' },
+                { icon: '🎯', name: 'Candidate', href: '/candidate/pre-ac' },
+                { icon: '✍️', name: 'Assessor', href: '/assessor/dashboard' },
+              ].map((role) => (
+                <Link key={role.name} href={role.href} style={{ textDecoration: 'none' }}>
+                  <div style={{
+                    backgroundColor: 'white',
+                    border: '1px solid #ddd',
+                    borderRadius: '0.75rem',
+                    padding: '1.5rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#d1da8f'
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#ddd'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}>
+                    <div style={{ fontSize: '1.8rem', marginBottom: '0.75rem' }}>{role.icon}</div>
+                    <p style={{ fontWeight: '600', color: '#002446', fontSize: '0.95rem', margin: 0 }}>
+                      {role.name}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 mt-24 py-8 text-center text-xs text-gray-500">
-        <p>© 2026 Authentic Talent Consulting · ATC Journey</p>
+      <footer style={{ borderTop: '1px solid #ddd', backgroundColor: 'white', padding: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: '#999' }}>
+        <p style={{ margin: 0 }}>© 2026 Authentic Talent Consulting · ATC Journey</p>
       </footer>
     </div>
   )
