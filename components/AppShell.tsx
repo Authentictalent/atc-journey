@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, LogOut, Menu, RotateCcw, X } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { DEMO_CDP } from '@/lib/seed'
@@ -75,7 +75,9 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
   return (
     <div className="flex min-h-screen flex-col">
       <AppHeader session={session} />
-      <main className="flex-1 pb-20">{children}</main>
+      <main className="flex-1 pb-20">
+        <Suspense fallback={null}>{children}</Suspense>
+      </main>
       <AppFooter />
     </div>
   )

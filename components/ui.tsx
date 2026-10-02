@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, type ComponentProps, type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { Coffee, Drama, FileSearch, Inbox, MessageSquare, Presentation, UsersRound, X } from 'lucide-react'
+import type { ExerciseKind } from '@/lib/catalog'
 import type { Format, Purpose } from '@/lib/types'
 import { FORMATS } from '@/lib/catalog'
 
@@ -301,6 +302,32 @@ export function Dialog({ open, onClose, title, eyebrow, children }: { open: bool
         <div className="mt-5">{children}</div>
       </div>
     </div>
+  )
+}
+
+const KIND_ICON: Record<ExerciseKind, typeof X> = {
+  interview: MessageSquare,
+  case: FileSearch,
+  roleplay: Drama,
+  presentation: Presentation,
+  inbox: Inbox,
+  group: UsersRound,
+  break: Coffee,
+}
+
+export function ExerciseIcon({ kind, size = 40, onNavy = false }: { kind: ExerciseKind; size?: number; onNavy?: boolean }) {
+  const Icon = KIND_ICON[kind]
+  return (
+    <span
+      className={cx(
+        'stadium inline-flex shrink-0 items-center justify-center',
+        onNavy ? 'bg-white/10 text-lime' : kind === 'break' ? 'bg-peach-pale text-peach-dark' : 'bg-teal-pale text-teal-dark',
+      )}
+      style={{ width: size, height: size }}
+      aria-hidden
+    >
+      <Icon size={size * 0.45} strokeWidth={1.9} />
+    </span>
   )
 }
 
