@@ -90,8 +90,6 @@ function AppHeader({ session }: { session: Session }) {
   const nav = navFor(state, session)
   const me = identity(state, session)
 
-  useEffect(() => setMobileOpen(false), [pathname])
-
   const isActive = (href: string, exact?: boolean) => (exact ? pathname === href : pathname === href || pathname.startsWith(href + '/'))
 
   return (
@@ -135,6 +133,7 @@ function AppHeader({ session }: { session: Session }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setMobileOpen(false)}
               className={cx('block rounded-lg px-3 py-2.5 text-[15px]', isActive(item.href, item.exact) ? 'font-semibold text-lime' : 'text-white/80')}
             >
               {item.label}

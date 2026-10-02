@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
 import { daysBetween, todayISO } from './dates'
 import { buildSeed, shiftDemo } from './seed'
 import type { AppState, Feedback, GridEntry, Participant, Project, Session } from './types'
@@ -60,6 +60,16 @@ function reducer(state: AppState, action: Action): AppState {
   }
 }
 
+interface Internal {
+  app: AppState
+  hydrated: boolean
+}
+
+function outer(state: Internal, action: Action): Internal {
+  if (action.type === 'hydrate') return { app: action.state, hydrated: true }
+  return { ...state, app: reducer(state.app, action) }
+}
+
 interface Ctx {
   state: AppState
   dispatch: React.Dispatch<Action>
@@ -68,20 +78,20 @@ interface Ctx {
 const StoreContext = createContext<Ctx | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, buildSeed)
-  const [hydrated, setHydrated] = useState(false)
+  const [{ app: state, hydrated }, dispatch] = useReducer(outer, undefined, () => ({ app: buildSeed(), hydrated: false }))
 
   useEffect(() => {
+    let restored = buildSeed()
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const saved = JSON.parse(raw) as AppState
-        dispatch({ type: 'hydrate', state: shiftDemo(saved, daysBetween(saved.seededOn, todayISO())) })
+        restored = shiftDemo(saved, daysBetween(saved.seededOn, todayISO()))
       }
     } catch {
       // stockage indisponible : la démo repart des données initiales
     }
-    setHydrated(true)
+    dispatch({ type: 'hydrate', state: restored })
   }, [])
 
   useEffect(() => {

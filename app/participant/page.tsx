@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import { ArrowRight, Check, Clock, ExternalLink, FileText, Mail, MapPin, Sparkles, Video } from 'lucide-react'
 import { useMe } from '@/lib/useMe'
