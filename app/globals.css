@@ -1,39 +1,194 @@
-@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* ============================================================
+   ATC Journey · Authentic Talent Consulting
+   Même ADN qu'Espace Certifiés : navy + lime dominants,
+   teal = savoir, peach = humain. Signature : le point lime.
+   ============================================================ */
 
 :root {
-  /* ATC Brand Colors */
   --navy: #002446;
+  --navy-deep: #001a33;
+  --navy-light: #163b65;
   --lime: #d1da8f;
+  --lime-light: #dde5a5;
+  --lime-pale: #eef1d8;
+  --lime-dark: #9aab5a;
+  --peach: #eba687;
+  --peach-dark: #d9825c;
+  --peach-pale: #fbeee6;
   --teal: #61a4b0;
-  --salmon: #eba687;
-  --off-white: #f6f6f2;
-
-  /* Light theme */
-  --background: var(--off-white);
-  --foreground: var(--navy);
-  --card-bg: #ffffff;
-  --border-color: #e5e5e0;
-  --text-secondary: #666666;
+  --teal-dark: #4a8894;
+  --teal-pale: #e3eef0;
+  --cream: #f5f3ee;
+  --cream-warm: #faf8f3;
+  --white: #ffffff;
+  --gray: #8895a7;
+  --ink-60: rgba(0, 36, 70, 0.6);
+  --ink-40: rgba(0, 36, 70, 0.4);
+  --ink-12: rgba(0, 36, 70, 0.12);
+  --ink-08: rgba(0, 36, 70, 0.08);
+  --ink-04: rgba(0, 36, 70, 0.04);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a1a18;
-    --foreground: #f6f6f2;
-    --card-bg: #2a2a28;
-    --border-color: #3a3a38;
-    --text-secondary: #b0b0aa;
-  }
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-light: var(--navy-light);
+  --color-lime: var(--lime);
+  --color-lime-light: var(--lime-light);
+  --color-lime-pale: var(--lime-pale);
+  --color-lime-dark: var(--lime-dark);
+  --color-peach: var(--peach);
+  --color-peach-dark: var(--peach-dark);
+  --color-peach-pale: var(--peach-pale);
+  --color-teal: var(--teal);
+  --color-teal-dark: var(--teal-dark);
+  --color-teal-pale: var(--teal-pale);
+  --color-cream: var(--cream);
+  --color-cream-warm: var(--cream-warm);
+  --color-atc-gray: var(--gray);
+  --font-heading: var(--font-jost);
+  --font-body: var(--font-nunito);
+  --font-mono: var(--font-plex-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
 }
 
 body {
-  font-family: 'Nunito Sans', sans-serif;
+  background: var(--cream);
+  color: var(--navy);
+  font-family: var(--font-nunito), system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Jost', sans-serif;
-  font-weight: 600;
+h1, h2, h3, h4 {
+  font-family: var(--font-jost), Futura, sans-serif;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+::selection { background: var(--lime); color: var(--navy); }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: #a8b2bf; border-radius: 999px; }
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+@layer components {
+/* ---------- Vocabulaire visuel ATC ---------- */
+
+/* Le point lime, l'atome du logo, posé en fin de titre */
+.dot::after { content: "."; color: var(--lime-dark); }
+.dot--bright::after { color: var(--lime); }
+
+/* Eyebrow : lime = action, teal = savoir, peach = humain */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+}
+.eyebrow--lime { color: var(--lime-dark); }
+.eyebrow--peach { color: var(--peach-dark); }
+.eyebrow--on-navy { color: var(--lime); }
+.eyebrow--muted { color: var(--ink-40); }
+
+/* Règle fine à ticks : la précision discrète */
+.tick-rule {
+  position: relative;
+  height: 1px;
+  background: var(--ink-12);
+}
+.tick-rule::before {
+  content: "";
+  position: absolute;
+  inset: -3px 0 auto 0;
+  height: 7px;
+  background-image: repeating-linear-gradient(to right, var(--ink-40) 0 1px, transparent 1px 25%);
+}
+.tick-rule--navy { background: rgba(255, 255, 255, 0.15); }
+.tick-rule--navy::before {
+  background-image: repeating-linear-gradient(to right, rgba(209, 218, 143, 0.55) 0 1px, transparent 1px 25%);
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--ink-08);
+  border-radius: 1.25rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card--hover:hover {
+  border-color: var(--lime-dark);
+  box-shadow: 0 16px 40px -20px rgba(0, 36, 70, 0.3);
+  transform: translateY(-2px);
+}
+
+.stadium { border-radius: 999px; }
+
+/* Pilules décoratives de la charte : contour fin, jamais sur le texte */
+.deco-pill {
+  position: absolute;
+  border-radius: 999px;
+  border: 2.5px solid;
+  pointer-events: none;
+}
+
+.field {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--ink-12);
+  border-radius: 0.875rem;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.9rem;
+  color: var(--navy);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field::placeholder { color: var(--ink-40); }
+.field:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-pale);
+}
+}
+
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise-in { animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes bar-in {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.bar-in {
+  transform-origin: left center;
+  animation: bar-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(209, 218, 143, 0.7); }
+  50% { box-shadow: 0 0 0 6px rgba(209, 218, 143, 0); }
+}
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rise-in, .bar-in, .pulse-dot { animation: none; }
+  .card--hover:hover { transform: none; }
 }
