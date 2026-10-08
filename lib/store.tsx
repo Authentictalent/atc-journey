@@ -5,7 +5,7 @@ import { daysBetween, todayISO } from './dates'
 import { buildSeed, shiftDemo } from './seed'
 import type { AppState, Assessor, Feedback, GridEntry, Participant, Project, Session, User } from './types'
 
-const STORAGE_KEY = 'atc-journey-demo-v2'
+const STORAGE_KEY = 'atc-journey-demo-v3'
 
 type Action =
   | { type: 'hydrate'; state: AppState }

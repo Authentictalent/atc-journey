@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, type ComponentProps, type ReactNode } from 'react'
-import { Coffee, Drama, FileSearch, Inbox, MessageSquare, Presentation, UsersRound, X } from 'lucide-react'
+import { ClipboardCheck, Coffee, Drama, FileSearch, MessageSquare, NotebookPen, Presentation, X } from 'lucide-react'
 import type { ExerciseKind } from '@/lib/catalog'
 import type { Format, Purpose } from '@/lib/types'
 import { FORMATS } from '@/lib/catalog'
@@ -310,8 +310,8 @@ const KIND_ICON: Record<ExerciseKind, typeof X> = {
   case: FileSearch,
   roleplay: Drama,
   presentation: Presentation,
-  inbox: Inbox,
-  group: UsersRound,
+  prep: NotebookPen,
+  self: ClipboardCheck,
   break: Coffee,
 }
 

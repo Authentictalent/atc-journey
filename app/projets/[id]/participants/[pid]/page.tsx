@@ -56,7 +56,7 @@ export default function ParticipantProfile() {
         actions={
           <>
             <Button variant={p.welcomeSentAt ? 'outline' : 'lime'} size="sm" onClick={() => setMailOpen(true)}>
-              <Mail size={14} /> {p.welcomeSentAt ? 'Mail de bienvenue' : 'Envoyer le mail de bienvenue'}
+              <Mail size={14} /> {p.welcomeSentAt ? 'Revoir le mail de bienvenue' : 'Préparer le mail de bienvenue'}
             </Button>
           {pending && !['day', 'feedback', 'invitation', 'date'].includes(pending.key) ? (
             <Button variant={reminded ? 'ghost' : 'outline'} size="sm" onClick={() => setReminded(true)} disabled={reminded}>

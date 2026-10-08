@@ -94,7 +94,7 @@ export default function AssessorDashboard() {
                             <MapPin size={13} /> {venueLabel(project)}
                           </p>
                           <p>
-                            {mine} exercice{mine > 1 ? 's' : ''} sur {schedule(project).filter((s) => s.catalog.kind !== 'break').length} à mener
+                            {mine} exercice{mine > 1 ? 's' : ''} sur {schedule(project).filter((s) => s.catalog.assessed).length} à mener
                           </p>
                         </div>
                       </div>

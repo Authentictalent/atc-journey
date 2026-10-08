@@ -33,7 +33,7 @@ export default function AssessorSession() {
   const w = wording(project.purpose)
   const f = features(project)
   const isLead = project.leadAssessorId === assessorId
-  const slots = scheduleFor(project, p).filter((s) => s.catalog.kind !== 'break')
+  const slots = scheduleFor(project, p).filter((s) => s.catalog.assessed)
   const mineSlots = isLead ? slots : slots.filter((s) => s.assessorId === assessorId)
   const checkDone = CHECKLIST.filter((c) => state.checklist[`${assessorId}:${p.id}:${c.id}`]).length
   const graded = project.competencyIds.filter((c) => state.grid[gridKey(p.id, c)]?.score).length

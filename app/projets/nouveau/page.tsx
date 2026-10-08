@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, Plus, Trash, UserPlus } from 'lucide-react'
 import { uid, useStore } from '@/lib/store'
-import { COMPETENCIES, EXERCISES, FORMATS, LIGHT_DURATIONS, exerciseById } from '@/lib/catalog'
+import { EXERCISES, FORMATS, LIGHT_DURATIONS, exerciseById } from '@/lib/catalog'
+import { AssessorSelect, DurationSelect, NoAssessor } from '@/components/cdp/ExerciseControls'
 import { fmtDuration, fmtTime, todayISO } from '@/lib/dates'
 import { endTime, schedule, venueLabel } from '@/lib/project'
 import { wording } from '@/lib/wording'
@@ -12,7 +13,7 @@ import type { Format, Participant, Project, ProjectExercise, Purpose } from '@/l
 import { Avatar, Button, ExerciseIcon, Field, FormatPill, PageHeader, PurposePill, cx } from '@/components/ui'
 import { VenueFields } from '@/components/cdp/OverviewTab'
 
-const STEPS = ['Cadre', 'Exercices', 'Participants', 'Équipe', 'Récapitulatif'] as const
+const STEPS = ['Cadre', 'Équipe', 'Exercices', 'Participants', 'Récapitulatif'] as const
 
 type Draft = Omit<Project, 'id'>
 type PersonDraft = { key: string; firstName: string; lastName: string; email: string; currentRole: string }
@@ -62,11 +63,13 @@ export default function NewProjectPage() {
 
   const canContinue = [
     draft.client.trim() && draft.position.trim() && draft.startTime && draft.cdpId,
+    !!draft.leadAssessorId,
     draft.exercises.length > 0,
     true,
-    !!draft.leadAssessorId,
     true,
   ][step]
+
+  const setEx = (id: string, change: Partial<ProjectExercise>) => set({ exercises: draft.exercises.map((e) => (e.id === id ? { ...e, ...change } : e)) })
 
   const moveEx = (i: number, dir: -1 | 1) => {
     const next = [...draft.exercises]
@@ -86,14 +89,7 @@ export default function NewProjectPage() {
 
   const create = () => {
     const id = uid('pr')
-    const team = [draft.leadAssessorId, ...draft.secondAssessorIds].filter(Boolean) as string[]
-    let turn = 0
-    const exercises = draft.exercises.map((e) => {
-      if (exerciseById(e.catalogId).kind === 'break') return e
-      const assessorId = team[turn % team.length] ?? null
-      turn++
-      return { ...e, assessorId }
-    })
+    const exercises = draft.exercises
     const participants: Participant[] = people.map((p) => ({
       id: uid('pa'),
       projectId: id,
@@ -239,8 +235,8 @@ export default function NewProjectPage() {
               </div>
             )}
 
-            {/* ---------- 2. Exercices ---------- */}
-            {step === 1 && (
+            {/* ---------- 3. Exercices ---------- */}
+            {step === 2 && (
               <div className="space-y-9">
                 <div>
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -251,11 +247,21 @@ export default function NewProjectPage() {
                   </div>
                   <ol className="mt-4 space-y-2.5">
                     {schedule({ ...draft, id: 'draft' }).map((s, i) => (
-                      <li key={s.id} className="flex items-center gap-4 rounded-2xl border border-navy/[0.08] px-4 py-3">
+                      <li key={s.id} className="flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-2xl border border-navy/[0.08] px-4 py-3">
                         <span className="tabular w-14 shrink-0 font-mono text-[12.5px] text-navy/55">{fmtTime(s.start)}</span>
                         <ExerciseIcon kind={s.catalog.kind} size={34} />
-                        <span className="flex-1 text-[14.5px] font-medium">{s.catalog.name}</span>
-                        <span className="text-[12.5px] text-navy/50">{fmtDuration(s.duration)}</span>
+                        <span className="min-w-[160px] flex-1 text-[14.5px] font-medium">{s.catalog.name}</span>
+                        <span className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                        {draft.format === 'light' ? (
+                          <span className="text-[12.5px] text-navy/50">{fmtDuration(s.duration)}</span>
+                        ) : (
+                          <DurationSelect value={s.duration} onChange={(duration) => setEx(s.id, { duration })} />
+                        )}
+                        {s.catalog.assessed ? (
+                          <AssessorSelect value={s.assessorId} onChange={(assessorId) => setEx(s.id, { assessorId })} team={[draft.leadAssessorId, ...draft.secondAssessorIds].filter(Boolean) as string[]} />
+                        ) : (
+                          <NoAssessor />
+                        )}
                         {draft.format !== 'light' && (
                           <span className="flex">
                             <button onClick={() => moveEx(i, -1)} disabled={i === 0} aria-label="Monter" className="stadium p-1.5 text-navy/45 hover:bg-navy/5 disabled:opacity-25">
@@ -274,6 +280,7 @@ export default function NewProjectPage() {
                             </button>
                           </span>
                         )}
+                        </span>
                       </li>
                     ))}
                   </ol>
@@ -319,36 +326,11 @@ export default function NewProjectPage() {
                     </div>
                   )}
                 </div>
-
-                <div>
-                  <p className="eyebrow">Référentiel de compétences</p>
-                  <p className="mt-1.5 text-[13.5px] text-navy/55">
-                    {preset.features.grid ? 'Ces compétences structurent la grille comportementale du lead.' : 'Elles orientent l’entretien.'}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {COMPETENCIES.map((c) => {
-                      const on = draft.competencyIds.includes(c.id)
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => set({ competencyIds: on ? draft.competencyIds.filter((x) => x !== c.id) : [...draft.competencyIds, c.id] })}
-                          aria-pressed={on}
-                          className={cx(
-                            'stadium flex items-center gap-1.5 px-3.5 py-2 text-[13px] transition-colors',
-                            on ? 'bg-navy font-semibold text-white' : 'bg-white text-navy/65 ring-1 ring-inset ring-navy/10 hover:ring-lime-dark',
-                          )}
-                        >
-                          {on && <Check size={13} className="text-lime" />} {c.name}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* ---------- 3. Participants ---------- */}
-            {step === 2 && (
+            {/* ---------- 4. Participants ---------- */}
+            {step === 3 && (
               <div className="space-y-7">
                 <div>
                   <p className="eyebrow">{w.participants}</p>
@@ -393,8 +375,8 @@ export default function NewProjectPage() {
               </div>
             )}
 
-            {/* ---------- 4. Équipe ---------- */}
-            {step === 3 && (
+            {/* ---------- 2. Équipe ---------- */}
+            {step === 1 && (
               <div className="space-y-8">
                 <div>
                   <p className="eyebrow">Lead assesseur</p>
@@ -440,7 +422,7 @@ export default function NewProjectPage() {
                     </div>
                   </div>
                 )}
-                <p className="text-[13px] text-navy/50">Les exercices seront répartis entre les membres de l’équipe ; vous pourrez ajuster dans le planning.</p>
+                <p className="text-[13px] text-navy/50">À l’étape suivante, vous attribuez un assesseur à chaque exercice, dans cette équipe ou parmi les autres assesseurs ATC.</p>
               </div>
             )}
 

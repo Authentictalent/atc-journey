@@ -159,7 +159,7 @@ export function requiredActions(project: Project, participants: Participant[]): 
   if (!project.leadAssessorId) out.push({ tone: 'peach', label: 'Assigner un lead assesseur', target: 'team' })
   const missing = minSeconds - project.secondAssessorIds.length
   if (missing > 0) out.push({ tone: 'peach', label: missing > 1 ? `Assigner ${missing} seconds assesseurs` : 'Assigner un second assesseur', target: 'team' })
-  const unassigned = project.exercises.filter((e) => exerciseById(e.catalogId).kind !== 'break' && !e.assessorId).length
+  const unassigned = project.exercises.filter((e) => exerciseById(e.catalogId).assessed && !e.assessorId).length
   if (unassigned) out.push({ tone: 'peach', label: plural(unassigned, 'exercice sans assesseur', 'exercices sans assesseur'), target: 'planning' })
   if (!participants.length) out.push({ tone: 'peach', label: `Ajouter des ${w.participants.toLowerCase()}`, target: 'participants' })
 
@@ -167,6 +167,8 @@ export function requiredActions(project: Project, participants: Participant[]): 
   if (noMail) out.push({ tone: 'lime', label: plural(noMail, 'mail de bienvenue à envoyer', 'mails de bienvenue à envoyer'), target: 'participants' })
   const toPropose = participants.filter((p) => p.slot.status === 'todo').length
   if (toPropose) out.push({ tone: 'lime', label: plural(toPropose, 'date à proposer', 'dates à proposer'), target: 'participants' })
+  const waiting = participants.filter((p) => p.slot.status === 'proposed').length
+  if (waiting) out.push({ tone: 'lime', label: plural(waiting, `${w.participant.toLowerCase()} n’a pas encore choisi sa date`, `${w.participants.toLowerCase()} n’ont pas encore choisi leur date`), target: 'participants' })
   const counters = participants.filter((p) => p.slot.status === 'counter').length
   if (counters) out.push({ tone: 'peach', label: plural(counters, 'contre-proposition de date à traiter', 'contre-propositions de date à traiter'), target: 'participants' })
 

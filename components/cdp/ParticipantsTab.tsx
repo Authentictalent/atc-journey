@@ -79,7 +79,7 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-[14px] text-navy/60">
-          {participants.length} {participants.length > 1 ? w.participants.toLowerCase() : w.participant.toLowerCase()} · cliquez sur une date pour la proposer, la confirmer ou la modifier.
+          {participants.length} {participants.length > 1 ? w.participants.toLowerCase() : w.participant.toLowerCase()} · cliquez sur une date pour la proposer, la confirmer ou la modifier. Les mails se copient dans Outlook.
         </p>
         <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
           <UserPlus size={14} /> Ajouter un {w.participant.toLowerCase()}
@@ -103,7 +103,7 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
                   </th>
                 ))}
                 {f.feedback && <th className="px-3 py-4 font-semibold">Feedback</th>}
-                <th className="px-3 py-4 text-center font-semibold">Mail</th>
+                <th className="px-3 py-4 text-center font-semibold">Bienvenue</th>
                 <th className="w-10" />
               </tr>
             </thead>
@@ -145,7 +145,7 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
                   <td className="px-3 py-4 text-center">
                     <button
                       onClick={() => setMailFor(p)}
-                      title={p.welcomeSentAt ? 'Mail de bienvenue envoyé' : 'Mail de bienvenue à envoyer'}
+                      title={p.welcomeSentAt ? 'Mail de bienvenue envoyé' : 'Préparer le mail de bienvenue à copier dans Outlook'}
                       aria-label={`Mail de bienvenue de ${fullName(p)}`}
                       className={cx('stadium inline-flex h-8 w-8 items-center justify-center transition-colors', p.welcomeSentAt ? 'bg-lime-pale text-lime-dark hover:bg-lime' : 'bg-peach-pale text-peach-dark ring-1 ring-peach/50 hover:bg-peach hover:text-white')}
                     >

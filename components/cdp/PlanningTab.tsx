@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, Plus, Trash } from 'lucide-react'
 import { uid, useStore } from '@/lib/store'
-import { EXERCISES, LIGHT_DURATIONS } from '@/lib/catalog'
+import { EXERCISES } from '@/lib/catalog'
+import { AssessorSelect, DurationSelect, NoAssessor } from './ExerciseControls'
 import { fmtDuration, fmtTime } from '@/lib/dates'
 import { endTime, schedule } from '@/lib/project'
 import type { Project, ProjectExercise } from '@/lib/types'
 import { Button, ExerciseIcon, Pill, cx } from '@/components/ui'
-
-const DURATIONS = [15, 20, 30, 45, 60, 75, 90, 105, 120]
 
 export function PlanningTab({ project }: { project: Project }) {
   const { state, dispatch } = useStore()
@@ -73,47 +72,11 @@ export function PlanningTab({ project }: { project: Project }) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    aria-label="Durée"
-                    value={s.duration}
-                    onChange={(e) => patch(s.id, { duration: Number(e.target.value) })}
-                    className="field !w-auto !rounded-full !py-1.5 !text-[13px]"
-                  >
-                    {Array.from(new Set(isLight ? LIGHT_DURATIONS : [...DURATIONS, s.duration]))
-                      .sort((a, b) => a - b)
-                      .map((d) => (
-                        <option key={d} value={d}>
-                          {fmtDuration(d)}
-                        </option>
-                      ))}
-                  </select>
-                  {!isBreak && (
-                    <select
-                      aria-label="Assesseur"
-                      value={s.assessorId ?? ''}
-                      onChange={(e) => patch(s.id, { assessorId: e.target.value || null })}
-                      className={cx('field !w-auto !rounded-full !py-1.5 !text-[13px]', !s.assessorId && '!border-peach !text-peach-dark')}
-                    >
-                      <option value="">Assesseur à choisir</option>
-                      <optgroup label="Équipe du dispositif">
-                        {state.assessors
-                          .filter((a) => team.includes(a.id))
-                          .map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.name}
-                            </option>
-                          ))}
-                      </optgroup>
-                      <optgroup label="Autres assesseurs ATC">
-                        {state.assessors
-                          .filter((a) => !team.includes(a.id) && a.active)
-                          .map((a) => (
-                            <option key={a.id} value={a.id}>
-                              {a.name}
-                            </option>
-                          ))}
-                      </optgroup>
-                    </select>
+                  <DurationSelect value={s.duration} onChange={(duration) => patch(s.id, { duration })} light={isLight} />
+                  {s.catalog.assessed ? (
+                    <AssessorSelect value={s.assessorId} onChange={(assessorId) => patch(s.id, { assessorId })} team={team} />
+                  ) : (
+                    <NoAssessor />
                   )}
                   {!isLight && (
                     <div className="flex items-center">

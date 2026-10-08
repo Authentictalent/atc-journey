@@ -1,12 +1,14 @@
 import type { Format } from './types'
 
-export type ExerciseKind = 'interview' | 'case' | 'roleplay' | 'presentation' | 'inbox' | 'group' | 'break'
+export type ExerciseKind = 'interview' | 'case' | 'roleplay' | 'presentation' | 'prep' | 'self' | 'break'
 
 export interface CatalogExercise {
   id: string
   name: string
   kind: ExerciseKind
   defaultDuration: number
+  /** Faux pour les exercices que le candidat réalise seul (préparations, études de cas, auto-positionnement, pause). */
+  assessed: boolean
   pitch: string
   instructions: string[]
   objective: string
@@ -15,11 +17,12 @@ export interface CatalogExercise {
 
 export const EXERCISES: CatalogExercise[] = [
   {
-    id: 'entretien',
-    name: 'Entretien structuré par compétences',
+    id: 'cbi',
+    name: 'CBI (Competency Based Interview)',
     kind: 'interview',
-    defaultDuration: 60,
-    pitch: 'Un échange approfondi sur votre parcours et des situations professionnelles vécues.',
+    defaultDuration: 10,
+    assessed: true,
+    pitch: 'Un échange sur des situations professionnelles que vous avez vécues.',
     instructions: [
       "L'assesseur vous interroge sur des situations concrètes que vous avez vécues.",
       'Décrivez le contexte, ce que vous avez fait personnellement et le résultat obtenu.',
@@ -32,89 +35,131 @@ export const EXERCISES: CatalogExercise[] = [
     ],
   },
   {
-    id: 'etude-cas',
-    name: 'Étude de cas',
+    id: 'etude-bioethics',
+    name: 'Étude de cas · Bioethics',
     kind: 'case',
-    defaultDuration: 75,
-    pitch: "Analyser une situation d'entreprise et formuler des recommandations.",
+    defaultDuration: 15,
+    assessed: false,
+    pitch: "Analyser la situation d'une entreprise et formuler vos recommandations.",
     instructions: [
-      'Vous recevez un dossier présentant une situation d’entreprise fictive.',
-      '45 minutes de préparation individuelle, puis 30 minutes de restitution à l’assesseur.',
+      'Vous recevez le dossier Bioethics, qui présente une situation d’entreprise.',
+      'Prenez connaissance des éléments et préparez vos recommandations.',
       'Priorisez : il est impossible de tout traiter, vos arbitrages font partie de l’exercice.',
     ],
-    objective: "Évaluer l'analyse, la hiérarchisation des enjeux, la vision et la qualité des recommandations.",
-    materials: [
-      { name: 'Dossier candidat · Cas Nova Industries', size: '1,2 Mo' },
-      { name: 'Corrigé et pistes attendues', size: '610 Ko' },
-    ],
+    objective: "Évaluer l'analyse, la hiérarchisation des enjeux et la qualité des recommandations.",
+    materials: [{ name: 'Dossier candidat · Bioethics', size: '1,1 Mo' }],
   },
   {
-    id: 'jeu-role',
-    name: 'Jeu de rôle managérial',
-    kind: 'roleplay',
-    defaultDuration: 30,
-    pitch: 'Une conversation délicate avec un collaborateur, jouée par un assesseur.',
+    id: 'etude-ecoseeds',
+    name: 'Étude de cas · Ecoseeds',
+    kind: 'case',
+    defaultDuration: 20,
+    assessed: false,
+    pitch: "Analyser la situation d'une entreprise et formuler vos recommandations.",
     instructions: [
-      'Vous disposez de 10 minutes pour prendre connaissance du contexte.',
-      "Puis 20 minutes d'échange avec un collaborateur, joué par l'un de nos assesseurs.",
-      'Comportez-vous comme vous le feriez réellement dans votre rôle de manager.',
+      'Vous recevez le dossier Ecoseeds, qui présente une situation d’entreprise.',
+      'Prenez connaissance des éléments et préparez vos recommandations.',
+      'Priorisez : il est impossible de tout traiter, vos arbitrages font partie de l’exercice.',
     ],
-    objective: "Observer l'écoute, l'assertivité, la gestion émotionnelle et la capacité à engager.",
-    materials: [
-      { name: 'Brief du rôle joué', size: '240 Ko' },
-      { name: 'Fiche contexte candidat', size: '150 Ko' },
-    ],
+    objective: "Évaluer l'analyse, la hiérarchisation des enjeux et la qualité des recommandations.",
+    materials: [{ name: 'Dossier candidat · Ecoseeds', size: '1,3 Mo' }],
   },
   {
     id: 'presentation',
     name: 'Présentation stratégique',
     kind: 'presentation',
     defaultDuration: 30,
-    pitch: 'Présenter une vision et la défendre face à un comité.',
+    assessed: true,
+    pitch: 'Présenter une vision et la défendre face aux assesseurs.',
     instructions: [
-      'Vous présentez votre vision sur le sujet transmis, en 15 minutes maximum.',
-      "Suivent 15 minutes de questions de la part du comité d'assesseurs.",
+      'Vous présentez votre vision sur le sujet transmis.',
+      'Les assesseurs vous posent ensuite leurs questions.',
       'Le support est libre : quelques slides ou une présentation orale suffisent.',
     ],
     objective: "Évaluer la clarté, la hauteur de vue, l'impact et la solidité face à la contradiction.",
     materials: [{ name: 'Sujet de présentation', size: '190 Ko' }],
   },
   {
-    id: 'in-basket',
-    name: 'In-basket',
-    kind: 'inbox',
+    id: 'prep-manager',
+    name: 'Préparation jeu de rôle managérial',
+    kind: 'prep',
     defaultDuration: 45,
-    pitch: 'Traiter une boîte de réception chargée et arbitrer les priorités.',
+    assessed: false,
+    pitch: 'Prendre connaissance du contexte avant un échange avec un collaborateur.',
     instructions: [
-      'Vous prenez la place d’un dirigeant de retour de congés, face à sa boîte de réception.',
-      'Traitez les messages : répondre, déléguer, planifier ou écarter, en justifiant vos choix.',
-      'Le temps est volontairement court.',
+      'Vous recevez le contexte d’une situation managériale.',
+      'Préparez l’échange que vous aurez ensuite avec un collaborateur, joué par un assesseur.',
+      'Notez vos objectifs et la façon dont vous souhaitez mener la conversation.',
     ],
-    objective: 'Mesurer la priorisation, la délégation, le sens politique et la gestion du temps.',
-    materials: [
-      { name: 'Boîte de réception · 18 messages', size: '880 Ko' },
-      { name: 'Grille de correction', size: '320 Ko' },
-    ],
+    objective: 'Temps de préparation individuel, sans observation.',
+    materials: [{ name: 'Fiche contexte · jeu de rôle managérial', size: '150 Ko' }],
   },
   {
-    id: 'groupe',
-    name: 'Exercice de groupe',
-    kind: 'group',
-    defaultDuration: 45,
-    pitch: 'Construire une décision commune avec les autres participants.',
+    id: 'prep-influence',
+    name: 'Préparation jeu de rôle influence',
+    kind: 'prep',
+    defaultDuration: 75,
+    assessed: false,
+    pitch: 'Préparer un échange où il faudra convaincre un interlocuteur.',
     instructions: [
-      'Vous travaillez avec les autres participants sur une problématique commune.',
-      'Chacun dispose d’informations propres, à partager pour aboutir à une décision collective.',
-      "L'objectif n'est pas de « gagner » mais d'aboutir ensemble.",
+      'Vous recevez le contexte d’une situation d’influence.',
+      'Préparez vos arguments et votre stratégie pour l’échange qui suit.',
+      'Anticipez les objections de votre interlocuteur.',
     ],
-    objective: "Observer la coopération, l'influence, la contribution et la gestion des désaccords.",
-    materials: [{ name: 'Fiches de rôles · 6 participants', size: '540 Ko' }],
+    objective: 'Temps de préparation individuel, sans observation.',
+    materials: [{ name: 'Fiche contexte · jeu de rôle influence', size: '170 Ko' }],
+  },
+  {
+    id: 'jeu-role',
+    name: 'Jeu de rôle',
+    kind: 'roleplay',
+    defaultDuration: 30,
+    assessed: true,
+    pitch: 'Un échange en situation, avec un interlocuteur joué par un assesseur.',
+    instructions: [
+      'Vous menez l’échange que vous avez préparé, avec un assesseur dans le rôle de votre interlocuteur.',
+      'Comportez-vous comme vous le feriez réellement dans votre rôle.',
+      'L’assesseur observe la manière dont vous conduisez la conversation.',
+    ],
+    objective: "Observer l'écoute, l'assertivité, la gestion émotionnelle et la capacité à engager ou à convaincre.",
+    materials: [{ name: 'Brief du rôle joué', size: '240 Ko' }],
+  },
+  {
+    id: 'entretien-hogan',
+    name: 'Entretien Hogan',
+    kind: 'interview',
+    defaultDuration: 90,
+    assessed: true,
+    pitch: 'Un échange approfondi à partir de vos résultats Hogan.',
+    instructions: [
+      'L’assesseur s’appuie sur vos inventaires Hogan pour explorer votre fonctionnement.',
+      'C’est un moment d’échange : vos exemples et votre regard comptent autant que les résultats.',
+      'Prenez le temps de nuancer et d’illustrer vos réponses.',
+    ],
+    objective: 'Confronter les résultats Hogan aux comportements observés et au parcours du participant.',
+    materials: [{ name: 'Rapports Hogan du participant', size: 'Plateforme Hogan' }],
+  },
+  {
+    id: 'auto-positionnement',
+    name: 'Auto-positionnement',
+    kind: 'self',
+    defaultDuration: 45,
+    assessed: false,
+    pitch: 'Évaluer vous-même vos compétences.',
+    instructions: [
+      'Vous vous positionnez sur chacune des compétences du référentiel.',
+      'Appuyez-vous sur des situations concrètes pour chaque appréciation.',
+      'Soyez juste : cet exercice nourrit l’échange de feedback.',
+    ],
+    objective: 'Recueillir la perception du participant sur ses propres compétences.',
+    materials: [{ name: "Grille d'auto-positionnement", size: '120 Ko' }],
   },
   {
     id: 'pause',
-    name: 'Pause déjeuner',
+    name: 'Pause',
     kind: 'break',
-    defaultDuration: 60,
+    defaultDuration: 15,
+    assessed: false,
     pitch: 'Un temps pour souffler.',
     instructions: ['Profitez-en pour vous déconnecter. La suite de votre programme apparaîtra au retour.'],
     objective: '',
@@ -122,7 +167,13 @@ export const EXERCISES: CatalogExercise[] = [
   },
 ]
 
-export const exerciseById = (id: string) => EXERCISES.find((e) => e.id === id)!
+export const exerciseById = (id: string) => EXERCISES.find((e) => e.id === id) ?? EXERCISES[0]
+
+/** Durées proposées pour tous les exercices. */
+export const DURATION_CHOICES = [10, 15, 20, 25, 30, 45, 60, 75, 90, 105, 120]
+
+/** L'AC Light est un Entretien Hogan seul, de 1 h 30 ou 2 h. */
+export const LIGHT_DURATIONS = [90, 120]
 
 export interface FormatPreset {
   label: string
@@ -133,14 +184,12 @@ export interface FormatPreset {
   features: { preQuestionnaire: boolean; postQuestionnaire: boolean; grid: boolean; feedback: boolean }
 }
 
-export const LIGHT_DURATIONS = [90, 120]
-
 export const FORMATS: Record<Format, FormatPreset> = {
   light: {
     label: 'Light',
     length: '1 h 30 ou 2 h',
-    description: 'Un entretien approfondi mené par un assesseur, appuyé sur le Hogan.',
-    defaultExercises: [{ catalogId: 'entretien', duration: 90 }],
+    description: 'Un Entretien Hogan approfondi, mené par un assesseur.',
+    defaultExercises: [{ catalogId: 'entretien-hogan', duration: 90 }],
     minSeconds: 0,
     features: { preQuestionnaire: false, postQuestionnaire: false, grid: false, feedback: false },
   },
@@ -148,7 +197,7 @@ export const FORMATS: Record<Format, FormatPreset> = {
     label: 'Robuste',
     length: 'Demi-journée',
     description: 'Plusieurs mises en situation, un lead et un second assesseur, une grille comportementale.',
-    defaultExercises: [{ catalogId: 'entretien' }, { catalogId: 'etude-cas' }, { catalogId: 'jeu-role' }],
+    defaultExercises: [{ catalogId: 'cbi', duration: 45 }, { catalogId: 'etude-bioethics' }, { catalogId: 'prep-manager' }, { catalogId: 'jeu-role' }],
     minSeconds: 1,
     features: { preQuestionnaire: true, postQuestionnaire: true, grid: true, feedback: true },
   },
@@ -157,13 +206,14 @@ export const FORMATS: Record<Format, FormatPreset> = {
     length: 'Journée complète',
     description: 'Le dispositif complet : mises en situation variées, équipe d’assesseurs, restitution approfondie.',
     defaultExercises: [
-      { catalogId: 'entretien' },
-      { catalogId: 'in-basket' },
-      { catalogId: 'etude-cas' },
-      { catalogId: 'pause' },
-      { catalogId: 'jeu-role' },
+      { catalogId: 'auto-positionnement' },
+      { catalogId: 'cbi', duration: 60 },
+      { catalogId: 'etude-ecoseeds' },
       { catalogId: 'presentation' },
-      { catalogId: 'groupe' },
+      { catalogId: 'pause' },
+      { catalogId: 'prep-influence' },
+      { catalogId: 'jeu-role' },
+      { catalogId: 'entretien-hogan' },
     ],
     minSeconds: 2,
     features: { preQuestionnaire: true, postQuestionnaire: true, grid: true, feedback: true },
