@@ -2,14 +2,13 @@
 
 import { CalendarDays, Check, Lock, Quote, Video } from 'lucide-react'
 import { useMe } from '@/lib/useMe'
-import { DEMO_CDP } from '@/lib/seed'
 import { fmtDate, fmtTime } from '@/lib/dates'
 import { EmptyState, PageHeader } from '@/components/ui'
 
 export default function FeedbackPage() {
   const me = useMe()
   if (!me) return null
-  const { participant: p, project, w, f } = me
+  const { participant: p, project, w, f, cdp } = me
   const fb = p.feedback
 
   if (!f.feedback)
@@ -112,10 +111,12 @@ export default function FeedbackPage() {
             <p className="text-[13.5px] leading-relaxed text-white/60">
               Avec votre lead assesseur, en visio. C’est aussi le moment de découvrir vos résultats Hogan, commentés.
             </p>
-            <a href={project.teamsUrl} target="_blank" rel="noreferrer" className="stadium mt-6 inline-flex items-center gap-2 bg-lime px-5 py-2.5 text-[14px] font-semibold text-navy hover:bg-lime-light">
-              <Video size={15} /> Lien de la session
-            </a>
-            <p className="mt-5 text-[12.5px] text-white/45">Un empêchement ? Écrivez à {DEMO_CDP.name}, votre cheffe de projet.</p>
+            {p.teamsUrl && (
+              <a href={p.teamsUrl} target="_blank" rel="noreferrer" className="stadium mt-6 inline-flex items-center gap-2 bg-lime px-5 py-2.5 text-[14px] font-semibold text-navy hover:bg-lime-light">
+                <Video size={15} /> Lien de la session
+              </a>
+            )}
+            <p className="mt-5 text-[12.5px] text-white/45">Un empêchement ? Écrivez à {cdp?.name ?? 'votre cheffe de projet'}{cdp ? `, ${cdp.email}` : ''}.</p>
           </div>
         </aside>
       </div>

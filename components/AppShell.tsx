@@ -5,27 +5,30 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, LogOut, Menu, RotateCcw, X } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { DEMO_CDP } from '@/lib/seed'
 import { features, fullName } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import type { AppState, Role, Session } from '@/lib/types'
 import { Avatar, cx } from './ui'
 
-export const DEFAULT_SESSIONS: Record<Role, Session> = {
-  cdp: { role: 'cdp' },
-  participant: { role: 'participant', participantId: 'pa-jean' },
-  assessor: { role: 'assessor', assessorId: 'a-sophie' },
-  sponsor: { role: 'sponsor', projectId: 'pr-sanofi' },
+export const HOME_BY_ROLE: Record<Role, string> = {
+  admin: '/projets',
+  cdp: '/projets',
+  participant: '/participant',
+  assessor: '/assesseur',
+  sponsor: '/commanditaire',
 }
 
 export function identity(state: AppState, session: Session) {
   switch (session.role) {
-    case 'cdp':
-      return { name: DEMO_CDP.name, label: DEMO_CDP.title }
+    case 'admin':
+    case 'cdp': {
+      const u = state.users.find((x) => x.id === session.userId)
+      return { name: u?.name ?? '', label: u?.title ?? '' }
+    }
     case 'participant': {
       const p = state.participants.find((x) => x.id === session.participantId)
       const project = state.projects.find((x) => x.id === p?.projectId)
-      return { name: p ? fullName(p) : '', label: project ? wording(project.purpose).participant : '' }
+      return { name: p ? fullName(p) : '', label: project ? `${wording(project.purpose).participant} · ${project.client}` : '' }
     }
     case 'assessor': {
       const a = state.assessors.find((x) => x.id === session.assessorId)
@@ -40,16 +43,23 @@ export function identity(state: AppState, session: Session) {
 
 function navFor(state: AppState, session: Session) {
   switch (session.role) {
+    case 'admin':
+      return [
+        { href: '/projets', label: 'Projets', exact: true },
+        { href: '/projets/nouveau', label: 'Nouveau projet' },
+        { href: '/equipe', label: 'Équipe & accès' },
+      ]
     case 'cdp':
       return [
-        { href: '/cdp', label: 'Projets', exact: true },
-        { href: '/cdp/projets/nouveau', label: 'Nouveau projet' },
+        { href: '/projets', label: 'Projets', exact: true },
+        { href: '/projets/nouveau', label: 'Nouveau projet' },
       ]
     case 'participant': {
       const p = state.participants.find((x) => x.id === session.participantId)
       const project = state.projects.find((x) => x.id === p?.projectId)
       const items = [
         { href: '/participant', label: 'Mon parcours', exact: true },
+        { href: '/participant/date', label: 'Ma date' },
         { href: '/participant/jour-j', label: 'Jour J' },
       ]
       if (project && features(project).feedback) items.push({ href: '/participant/feedback', label: 'Feedback' })
@@ -62,15 +72,17 @@ function navFor(state: AppState, session: Session) {
   }
 }
 
-export function AppShell({ role, children }: { role: Role; children: ReactNode }) {
-  const { state, dispatch } = useStore()
+export function AppShell({ roles, children }: { roles: Role[]; children: ReactNode }) {
+  const { state } = useStore()
+  const router = useRouter()
   const session = state.session
+  const allowed = !!session && roles.includes(session.role)
 
   useEffect(() => {
-    if (session?.role !== role) dispatch({ type: 'signIn', session: DEFAULT_SESSIONS[role] })
-  }, [session?.role, role, dispatch])
+    if (!allowed) router.replace('/')
+  }, [allowed, router])
 
-  if (session?.role !== role) return <div className="min-h-screen bg-cream" />
+  if (!allowed || !session) return <div className="min-h-screen bg-cream" />
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -109,10 +121,7 @@ function AppHeader({ session }: { session: Session }) {
             <Link
               key={item.href}
               href={item.href}
-              className={cx(
-                'rounded-lg px-3 py-2 text-[13.5px] transition-colors',
-                isActive(item.href, item.exact) ? 'font-medium text-lime' : 'text-white/70 hover:text-white',
-              )}
+              className={cx('rounded-lg px-3 py-2 text-[13.5px] transition-colors', isActive(item.href, item.exact) ? 'font-medium text-lime' : 'text-white/70 hover:text-white')}
             >
               {item.label}
             </Link>
@@ -158,13 +167,11 @@ function ProfileMenu({ name, label }: { name: string; label: string }) {
     return () => window.removeEventListener('mousedown', onClick)
   }, [open])
 
+  const item = 'flex w-full items-center gap-2.5 px-5 py-2.5 text-left text-[13.5px] text-white/80 transition-colors hover:bg-white/5 hover:text-lime'
+
   return (
     <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="stadium flex items-center gap-2.5 py-1 pl-1 pr-2.5 transition-colors hover:bg-white/5"
-      >
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="stadium flex items-center gap-2.5 py-1 pl-1 pr-2.5 transition-colors hover:bg-white/5">
         <Avatar name={name} size={32} />
         <span className="hidden text-left leading-tight lg:block">
           <span className="block text-[13px] font-semibold text-white">{name}</span>
@@ -178,21 +185,24 @@ function ProfileMenu({ name, label }: { name: string; label: string }) {
             <p className="text-[14px] font-semibold">{name}</p>
             <p className="text-[12px] text-white/50">{label}</p>
           </div>
-          <p className="eyebrow eyebrow--on-navy px-5 pb-1 pt-1 !text-[10px]">Démonstration</p>
           <button
-            onClick={() => router.push('/')}
-            className="flex w-full items-center gap-2.5 px-5 py-2.5 text-left text-[13.5px] text-white/80 transition-colors hover:bg-white/5 hover:text-lime"
+            onClick={() => {
+              dispatch({ type: 'signOut' })
+              router.push('/')
+            }}
+            className={item}
           >
-            <LogOut size={15} /> Changer de profil
+            <LogOut size={15} /> Se déconnecter
           </button>
+          <div className="mx-5 my-1.5 border-t border-white/10" />
           <button
             onClick={() => {
               dispatch({ type: 'reset' })
               setOpen(false)
             }}
-            className="flex w-full items-center gap-2.5 px-5 py-2.5 text-left text-[13.5px] text-white/80 transition-colors hover:bg-white/5 hover:text-lime"
+            className={item}
           >
-            <RotateCcw size={15} /> Réinitialiser les données
+            <RotateCcw size={15} /> Réinitialiser la démo
           </button>
         </div>
       )}

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowRight, CalendarDays, Crown, MapPin } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { fmtDate, fmtTime, relativeDay } from '@/lib/dates'
-import { assessorSessions, CHECKLIST, endTime, fullName, gridKey, isDayDone, schedule, type SessionStatus } from '@/lib/project'
+import { assessorSessions, CHECKLIST, endTime, fullName, gridKey, isDayDone, schedule, scheduleFor, venueLabel, type SessionStatus } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import type { Project } from '@/lib/types'
 import { Avatar, EmptyState, FormatPill, PageHeader, Pill, ProgressBar, Stat, cx } from '@/components/ui'
@@ -90,14 +90,8 @@ export default function AssessorDashboard() {
                           <p className={cx('text-[14px]', live ? 'text-white/60' : 'text-navy/60')}>{project.position}</p>
                         </div>
                         <div className={cx('space-y-1 text-right text-[13px]', live ? 'text-white/60' : 'text-navy/55')}>
-                          <p className={cx('flex items-center justify-end gap-1.5 font-semibold', live ? 'text-white' : 'text-navy')}>
-                            <CalendarDays size={14} /> {g.status === 'done' ? fmtDate(project.date, false) : relativeDay(project.date)}
-                          </p>
-                          <p className="tabular font-mono">
-                            {fmtTime(project.startTime)} – {fmtTime(endTime(project))}
-                          </p>
                           <p className="flex items-center justify-end gap-1.5">
-                            <MapPin size={13} /> {project.location.split(' · ')[0]}
+                            <MapPin size={13} /> {venueLabel(project)}
                           </p>
                           <p>
                             {mine} exercice{mine > 1 ? 's' : ''} sur {schedule(project).filter((s) => s.catalog.kind !== 'break').length} à mener
@@ -108,7 +102,7 @@ export default function AssessorDashboard() {
                         {items.map(({ participant: p }) => {
                           const done = prep(p.id)
                           const graded = project.competencyIds.filter((c) => state.grid[gridKey(p.id, c)]?.score).length
-                          const current = schedule(project)[p.dayProgress]
+                          const current = scheduleFor(project, p)[p.dayProgress]
                           return (
                             <li key={p.id}>
                               <Link
@@ -121,6 +115,20 @@ export default function AssessorDashboard() {
                                   <span className={cx('block text-[12.5px]', live ? 'text-white/50' : 'text-navy/50')}>
                                     {w.participant} · {p.currentRole}
                                   </span>
+                                </span>
+                                <span className={cx('w-40 text-[12.5px]', live ? 'text-white/70' : 'text-navy/60')}>
+                                  {p.slot.confirmed ? (
+                                    <>
+                                      <span className={cx('flex items-center gap-1.5 font-semibold', live ? 'text-white' : 'text-navy')}>
+                                        <CalendarDays size={13} /> {g.status === 'done' ? fmtDate(p.slot.confirmed.date, false) : relativeDay(p.slot.confirmed.date)}
+                                      </span>
+                                      <span className="tabular font-mono">
+                                        {fmtTime(p.slot.confirmed.time)} à {fmtTime(endTime(project, p.slot.confirmed.time))}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="font-semibold text-peach-dark">Date à fixer</span>
+                                  )}
                                 </span>
                                 <span className="w-56 text-[12.5px]">
                                   {g.status === 'preparation' && (

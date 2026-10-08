@@ -3,9 +3,8 @@
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { Eye } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { fmtDate } from '@/lib/dates'
 import { FORMATS } from '@/lib/catalog'
-import { phaseOf, projectParticipants } from '@/lib/project'
+import { PHASE_LABEL, phaseOf, projectParticipants } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import { ButtonLink, EmptyState, FormatPill, PageHeader, PurposePill, Tabs } from '@/components/ui'
 import { OverviewTab } from '@/components/cdp/OverviewTab'
@@ -34,14 +33,14 @@ export default function ProjectPage() {
   const participants = projectParticipants(state, project.id)
   const w = wording(project.purpose)
   const tab = (search.get('onglet') as Tab) || 'overview'
-  const setTab = (t: Tab) => router.replace(`/cdp/projets/${project.id}${t === 'overview' ? '' : `?onglet=${t}`}`, { scroll: false })
+  const setTab = (t: Tab) => router.replace(`/projets/${project.id}${t === 'overview' ? '' : `?onglet=${t}`}`, { scroll: false })
   const team = [project.leadAssessorId, ...project.secondAssessorIds].filter(Boolean).length
 
   return (
     <>
       <PageHeader
-        back={{ href: '/cdp', label: 'Tous les dispositifs' }}
-        eyebrow={`${w.center} · ${FORMATS[project.format].label} · ${phaseOf(project, participants) === 'jour-j' ? 'Jour J' : fmtDate(project.date, false)}`}
+        back={{ href: '/projets', label: 'Tous les projets' }}
+        eyebrow={`${w.center} · ${FORMATS[project.format].label} · ${PHASE_LABEL[phaseOf(project, participants)]}${project.period ? ` · ${project.period}` : ''}`}
         tone="lime"
         title={project.client}
         description={

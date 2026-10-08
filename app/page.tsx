@@ -1,251 +1,201 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Clock, MapPin } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { ArrowRight, ChevronDown, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { DEMO_CDP } from '@/lib/seed'
-import { FORMATS } from '@/lib/catalog'
-import { fmtDate, fmtDuration, fmtTime } from '@/lib/dates'
-import { fullName, schedule } from '@/lib/project'
-import type { Format, Session } from '@/lib/types'
-import { AppFooter } from '@/components/AppShell'
-import { Avatar, cx } from '@/components/ui'
+import { fullName } from '@/lib/project'
+import { wording } from '@/lib/wording'
+import type { AppState, Session } from '@/lib/types'
+import { HOME_BY_ROLE } from '@/components/AppShell'
+import { Avatar, Button, cx } from '@/components/ui'
 
-const JOURNEY = [
-  { label: 'Invitation', text: 'Le participant reçoit son accès et découvre son parcours.' },
-  { label: 'Hogan', text: 'Les inventaires de personnalité, en accès libre.' },
-  { label: 'Questionnaire', text: 'Son parcours, ses motivations, ses attentes.' },
-  { label: 'Jour J', text: 'Les mises en situation, révélées une à une.' },
-  { label: 'Retour', text: 'Un questionnaire à chaud sur l’expérience vécue.' },
-  { label: 'Feedback', text: 'La restitution, débloquée après le debrief client.' },
+type Account = { email: string; name: string; label: string; session: Session; active: boolean }
+
+function accounts(state: AppState): Account[] {
+  return [
+    ...state.users.map((u) => ({ email: u.email, name: u.name, label: u.role === 'admin' ? 'Admin' : 'Cheffe de projet', session: { role: u.role, userId: u.id } as Session, active: u.active })),
+    ...state.assessors.map((a) => ({ email: a.email, name: a.name, label: 'Assesseur', session: { role: 'assessor', assessorId: a.id } as Session, active: a.active })),
+    ...state.participants.map((p) => {
+      const project = state.projects.find((x) => x.id === p.projectId)
+      return {
+        email: p.email,
+        name: fullName(p),
+        label: project ? `${wording(project.purpose).participant} · ${project.client}` : 'Participant',
+        session: { role: 'participant', participantId: p.id } as Session,
+        active: true,
+      }
+    }),
+    ...state.projects
+      .filter((p) => p.sponsorEmail)
+      .map((p) => ({ email: p.sponsorEmail, name: p.sponsorName, label: `Commanditaire · ${p.client}`, session: { role: 'sponsor', projectId: p.id } as Session, active: true })),
+  ]
+}
+
+const DEMO_GROUPS: { title: string; emails: string[] }[] = [
+  { title: 'Équipe ATC', emails: ['margaux.lefort@authentictalent.fr', 'camille.laurent@authentictalent.fr', 'sophie.durand@authentictalent.fr'] },
+  { title: 'Candidats et bénéficiaires', emails: ['jean.dupont@exemple.fr', 'leila.mansouri@exemple.fr', 'karim.haddad@exemple.fr'] },
+  { title: 'Client', emails: ['marc.lefevre@exemple.fr'] },
 ]
 
-export default function HomePage() {
+export default function LoginPage() {
   const { state, dispatch } = useStore()
   const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [forgot, setForgot] = useState(false)
+  const [demoOpen, setDemoOpen] = useState(false)
 
-  const sanofi = state.projects.find((p) => p.id === 'pr-sanofi')
-  const jean = state.participants.find((p) => p.id === 'pa-jean')
-  const leila = state.participants.find((p) => p.id === 'pa-leila')
-  const sophie = state.assessors.find((a) => a.id === 'a-sophie')
+  const session = state.session
+  useEffect(() => {
+    if (session) router.replace(HOME_BY_ROLE[session.role])
+  }, [session, router])
 
-  const enter = (session: Session, href: string) => {
-    dispatch({ type: 'signIn', session })
-    router.push(href)
+  const all = accounts(state)
+
+  const enter = (account: Account) => {
+    if (!account.active) {
+      setError('Cet accès a été désactivé. Contactez Authentic Talent pour le réactiver.')
+      return
+    }
+    dispatch({ type: 'signIn', session: account.session })
   }
 
-  const profiles = [
-    {
-      key: 'cdp',
-      eyebrow: 'Cheffe de projet',
-      name: DEMO_CDP.name,
-      text: 'Cadrez un dispositif, composez le planning, assignez les assesseurs et débloquez les feedbacks.',
-      session: { role: 'cdp' } as Session,
-      href: '/cdp',
-      featured: true,
-    },
-    {
-      key: 'assessor',
-      eyebrow: 'Assesseur',
-      name: sophie?.name ?? 'Assesseur',
-      text: 'Préparez vos sessions, prenez vos notes en direct, complétez la grille.',
-      session: { role: 'assessor', assessorId: 'a-sophie' } as Session,
-      href: '/assesseur',
-    },
-    {
-      key: 'candidate',
-      eyebrow: 'Candidat · AC',
-      name: jean ? fullName(jean) : 'Candidat',
-      text: 'Le jour J vu de l’intérieur : un exercice après l’autre.',
-      session: { role: 'participant', participantId: 'pa-jean' } as Session,
-      href: '/participant',
-    },
-    {
-      key: 'beneficiary',
-      eyebrow: 'Bénéficiaire · DC',
-      name: leila ? fullName(leila) : 'Bénéficiaire',
-      text: 'Un Development Center en préparation, pré-DC en cours.',
-      session: { role: 'participant', participantId: 'pa-leila' } as Session,
-      href: '/participant',
-    },
-    {
-      key: 'sponsor',
-      eyebrow: 'Commanditaire',
-      name: sanofi?.sponsorName ?? 'Commanditaire',
-      text: 'L’avancement du dispositif, sans entrer dans l’évaluation.',
-      session: { role: 'sponsor', projectId: 'pr-sanofi' } as Session,
-      href: '/commanditaire',
-    },
-  ]
-
-  const slots = sanofi ? schedule(sanofi) : []
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+    const account = all.find((a) => a.email.toLowerCase() === email.trim().toLowerCase())
+    if (!account) return setError('Aucun compte ne correspond à cet email. Vérifiez l’adresse reçue dans votre invitation.')
+    if (!password) return setError('Saisissez votre mot de passe.')
+    enter(account)
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* ============ HERO ============ */}
-      <section className="relative overflow-hidden bg-navy-deep text-white">
-        <div className="deco-pill hidden border-lime/60 md:block" style={{ width: 220, height: 64, top: 84, right: -90 }} aria-hidden />
-        <div className="deco-pill hidden border-teal/55 md:block" style={{ width: 150, height: 52, bottom: 34, right: 140 }} aria-hidden />
-        <div className="deco-pill hidden border-peach/55 md:block" style={{ width: 200, height: 64, bottom: 40, left: -90 }} aria-hidden />
+    <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+      {/* ============ Panneau de marque ============ */}
+      <section className="relative flex flex-col overflow-hidden bg-navy-deep px-6 py-8 text-white sm:px-10 lg:px-14 lg:py-12">
+        <div className="deco-pill hidden border-lime/60 lg:block" style={{ width: 240, height: 76, top: 150, right: -90 }} aria-hidden />
+        <div className="deco-pill hidden border-teal/50 lg:block" style={{ width: 150, height: 52, top: 204, right: 120 }} aria-hidden />
+        <div className="deco-pill hidden border-peach/55 lg:block" style={{ width: 210, height: 66, bottom: 70, left: -90 }} aria-hidden />
 
-        <div className="relative mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-atc-white.png" alt="Authentic Talent, make your talent shine" className="h-10 w-auto" />
-            <span className="hidden h-6 w-px bg-white/15 sm:block" aria-hidden />
-            <span className="hidden font-heading text-[15px] font-medium text-white/90 sm:block">
-              ATC Journey<span className="text-lime">.</span>
-            </span>
-          </div>
-          <a href="#demo" className="stadium bg-lime px-4 py-1.5 text-[13px] font-semibold text-navy transition-colors hover:bg-lime-light">
-            Accéder à la démo
-          </a>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-atc-white.png" alt="Authentic Talent, make your talent shine" className="relative h-11 w-auto self-start" />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 pb-24 pt-14 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pb-28 lg:pt-20">
-          <div>
-            <p className="eyebrow eyebrow--on-navy rise-in">Assessment & Development Centers · Authentic Talent Consulting</p>
-            <h1 className="dot dot--bright rise-in mt-5 text-[44px] font-medium leading-[1.04] tracking-tight sm:text-[60px] lg:text-[66px]" style={{ animationDelay: '0.07s' }}>
-              Chaque talent mérite un parcours à sa hauteur
-            </h1>
-            <p className="rise-in mt-6 max-w-xl text-[17px] leading-relaxed text-white/70" style={{ animationDelay: '0.14s' }}>
-              De l’invitation au feedback, ATC Journey réunit candidats, assesseurs, cheffes de projet et commanditaires
-              autour d’une même expérience : exigeante, fluide, et profondément humaine.
-            </p>
-            <div className="rise-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: '0.21s' }}>
-              <a href="#demo" className="stadium inline-flex items-center gap-2 bg-lime px-6 py-3 text-[15px] font-semibold text-navy transition-colors hover:bg-lime-light">
-                Choisir un profil <ArrowRight size={16} />
-              </a>
-              <a href="#parcours" className="stadium inline-flex items-center gap-2 border border-white/20 px-6 py-3 text-[15px] text-white/80 transition-colors hover:border-lime/60 hover:text-white">
-                Découvrir le parcours
-              </a>
-            </div>
-          </div>
-
-          {/* Aperçu vivant : la journée Sanofi telle qu'elle se déroule aujourd'hui */}
-          {sanofi && (
-            <div className="rise-in relative" style={{ animationDelay: '0.28s' }}>
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-[0_40px_90px_-30px_rgba(0,0,0,0.7)] backdrop-blur sm:p-7">
-                <div className="flex items-center justify-between">
-                  <p className="eyebrow eyebrow--on-navy">Aujourd’hui</p>
-                  <span className="stadium flex items-center gap-1.5 bg-lime/15 px-2.5 py-1 text-[11px] font-semibold text-lime">
-                    <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-lime" /> Jour J en cours
-                  </span>
-                </div>
-                <h2 className="mt-3 text-[22px] font-medium leading-snug">
-                  {sanofi.client} · {sanofi.position}
-                </h2>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-white/55">
-                  <span className="flex items-center gap-1.5"><Clock size={13} /> {fmtDate(sanofi.date)}</span>
-                  <span className="flex items-center gap-1.5"><MapPin size={13} /> {sanofi.location}</span>
-                </div>
-                <div className="tick-rule tick-rule--navy my-5" />
-                <ol className="space-y-2.5">
-                  {slots.map((s, i) => (
-                    <li key={s.id} className={cx('flex items-center gap-4 rounded-2xl px-4 py-3', i === 1 ? 'bg-white/[0.07] ring-1 ring-lime/40' : '')}>
-                      <span className="tabular w-16 shrink-0 whitespace-nowrap font-mono text-[12.5px] text-white/50">{fmtTime(s.start)}</span>
-                      <span className={cx('flex-1 text-[14px]', i === 1 ? 'font-semibold text-white' : 'text-white/70')}>{s.catalog.name}</span>
-                      <span className="text-[12px] text-white/40">{fmtDuration(s.duration)}</span>
-                    </li>
-                  ))}
-                </ol>
-                <div className="mt-5 flex items-center justify-between text-[12.5px] text-white/50">
-                  <span>{state.participants.filter((p) => p.projectId === sanofi.id).length} candidats · lead {state.assessors.find((a) => a.id === sanofi.leadAssessorId)?.name}</span>
-                  <span className="text-lime">Format {FORMATS[sanofi.format].label}</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="tick-rule tick-rule--navy" />
-      </section>
-
-      {/* ============ PROFILS DE DÉMO ============ */}
-      <section id="demo" className="mx-auto w-full max-w-7xl scroll-mt-6 px-4 py-20 sm:px-6 lg:py-24">
-        <div className="mb-12 max-w-2xl">
-          <p className="eyebrow eyebrow--lime">Démonstration</p>
-          <h2 className="dot mt-2.5 text-[32px] font-medium leading-tight sm:text-[40px]">Entrez par le rôle de votre choix</h2>
-          <p className="mt-3 text-[15.5px] leading-relaxed text-navy/60">
-            Chaque profil voit la plateforme telle qu’elle lui est destinée. Les données sont fictives et vos actions sont conservées dans ce navigateur.
+        <div className="relative my-10 max-w-lg lg:my-auto">
+          <p className="eyebrow eyebrow--on-navy rise-in">ATC Journey</p>
+          <h1 className="dot dot--bright rise-in mt-4 text-[38px] font-medium leading-[1.06] tracking-tight sm:text-[52px]" style={{ animationDelay: '0.07s' }}>
+            Votre parcours, au même endroit
+          </h1>
+          <p className="rise-in mt-5 hidden text-[16.5px] leading-relaxed text-white/65 sm:block" style={{ animationDelay: '0.14s' }}>
+            Assessment & Development Centers : la date de votre journée, vos questionnaires, votre programme et votre feedback, réunis dans un espace sécurisé.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {profiles.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => enter(p.session, p.href)}
-              className={cx(
-                'card card--hover group flex flex-col p-6 text-left',
-                p.featured && 'relative overflow-hidden bg-navy text-white sm:col-span-2 lg:col-span-2',
-              )}
-            >
-              {p.featured && <div className="deco-pill border-lime/40" style={{ width: 180, height: 58, bottom: -20, right: -40 }} aria-hidden />}
-              <div className="flex items-center gap-3">
-                <Avatar name={p.name} size={42} tone={p.featured ? 'lime' : 'navy'} />
-                <div>
-                  <p className={cx('eyebrow', p.featured ? 'eyebrow--on-navy' : 'eyebrow--lime')}>{p.eyebrow}</p>
-                  <p className={cx('mt-0.5 font-heading text-[18px] font-medium', p.featured ? 'text-white' : 'text-navy')}>{p.name}</p>
-                </div>
-              </div>
-              <p className={cx('mt-5 flex-1 text-[14px] leading-relaxed', p.featured ? 'max-w-md text-white/65' : 'text-navy/60')}>{p.text}</p>
-              <span className={cx('mt-5 inline-flex items-center gap-1.5 text-[13.5px] font-semibold', p.featured ? 'text-lime' : 'text-navy')}>
-                Entrer <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+        <p className="relative hidden text-[12.5px] text-white/40 lg:block">© Authentic Talent Consulting</p>
+      </section>
+
+      {/* ============ Formulaire ============ */}
+      <section className="flex items-center justify-center bg-cream px-6 py-12 sm:px-10">
+        <div className="w-full max-w-[420px]">
+          <p className="eyebrow eyebrow--lime">Connexion</p>
+          <h2 className="dot mt-2 text-[32px] font-medium leading-tight">Bienvenue</h2>
+          <p className="mt-2 text-[15px] text-navy/60">Connectez-vous avec l’email de votre invitation.</p>
+
+          <form onSubmit={submit} className="mt-8 space-y-4" noValidate>
+            <label className="block">
+              <span className="mb-1.5 block text-[13px] font-semibold">Email</span>
+              <span className="relative block">
+                <Mail size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/35" />
+                <input
+                  type="email"
+                  autoComplete="email"
+                  className="field !pl-10"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="prenom.nom@entreprise.fr"
+                />
               </span>
-            </button>
-          ))}
-        </div>
-      </section>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 flex items-baseline justify-between text-[13px] font-semibold">
+                Mot de passe
+                <button type="button" onClick={() => setForgot((f) => !f)} className="text-[12.5px] font-normal text-teal-dark hover:underline">
+                  Mot de passe oublié ?
+                </button>
+              </span>
+              <span className="relative block">
+                <Lock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/35" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  className="field !pl-10 !pr-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-navy/40 hover:text-navy"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </span>
+            </label>
 
-      {/* ============ LE PARCOURS ============ */}
-      <section id="parcours" className="mx-auto w-full max-w-7xl scroll-mt-6 px-4 pb-20 sm:px-6 lg:pb-24">
-        <div className="mb-12 max-w-2xl">
-          <p className="eyebrow">Le parcours</p>
-          <h2 className="dot mt-2.5 text-[32px] font-medium leading-tight sm:text-[40px]">De l’invitation au feedback, sans couture</h2>
-        </div>
-        <div className="relative">
-          <div className="absolute inset-x-0 top-[6px] hidden h-px bg-navy/10 lg:block" aria-hidden />
-          <ol className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6 lg:gap-5">
-            {JOURNEY.map((step, i) => (
-              <li key={step.label} className="relative">
-                <div className="flex items-center gap-3">
-                  <span className="relative z-10 h-[13px] w-[13px] rounded-full bg-lime-dark ring-4 ring-cream" />
-                  <span className="font-heading text-[15px] font-medium text-navy/35">{String(i + 1).padStart(2, '0')}</span>
-                </div>
-                <h3 className="mt-4 text-[17px] font-semibold">{step.label}</h3>
-                <p className="mt-1.5 text-[13.5px] leading-relaxed text-navy/60">{step.text}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* ============ FORMATS ============ */}
-      <section className="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-navy text-white">
-          <div className="deco-pill hidden border-peach/40 md:block" style={{ width: 170, height: 56, bottom: -22, right: -46 }} aria-hidden />
-          <div className="relative grid gap-8 p-8 sm:p-10 lg:grid-cols-[1fr_2fr]">
-            <div>
-              <p className="eyebrow eyebrow--on-navy">Trois formats</p>
-              <h2 className="dot dot--bright mt-2 text-3xl font-medium leading-tight">Le dispositif juste, pour chaque enjeu</h2>
-              <p className="mt-3 text-[14.5px] leading-relaxed text-white/65">
-                En sélection (AC) comme en développement (DC), le format fixe la profondeur de l’évaluation et l’équipe mobilisée.
+            {forgot && (
+              <p className="rounded-2xl bg-teal-pale px-4 py-3 text-[13px] leading-relaxed text-teal-dark">
+                Écrivez à contact@authentictalent.fr : votre cheffe de projet vous renverra un lien de connexion.
               </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {(Object.keys(FORMATS) as Format[]).map((f) => (
-                <div key={f} className="rounded-2xl border border-white/15 bg-white/[0.05] p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-lime">{FORMATS[f].length}</p>
-                  <h3 className="mt-2 text-xl font-medium">{FORMATS[f].label}</h3>
-                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-white/60">{FORMATS[f].description}</p>
-                </div>
-              ))}
-            </div>
+            )}
+            {error && (
+              <p role="alert" className="rounded-2xl bg-peach-pale px-4 py-3 text-[13px] leading-relaxed text-peach-dark">
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" size="lg" className="w-full">
+              Se connecter <ArrowRight size={16} />
+            </Button>
+          </form>
+
+          {/* Accès démo : discret, pour les tests internes */}
+          <div className="mt-10 border-t border-navy/10 pt-5">
+            <button onClick={() => setDemoOpen((o) => !o)} aria-expanded={demoOpen} className="flex items-center gap-1.5 text-[12.5px] text-navy/45 hover:text-navy">
+              Accès démo <ChevronDown size={13} className={cx('transition-transform', demoOpen && 'rotate-180')} />
+            </button>
+            {demoOpen && (
+              <div className="mt-4 space-y-5">
+                <p className="text-[12.5px] text-navy/50">Environnement de démonstration : tout mot de passe est accepté.</p>
+                {DEMO_GROUPS.map((g) => (
+                  <div key={g.title}>
+                    <p className="eyebrow eyebrow--muted !text-[10px]">{g.title}</p>
+                    <ul className="mt-2 space-y-1.5">
+                      {g.emails
+                        .map((e) => all.find((a) => a.email === e))
+                        .filter((a): a is Account => !!a)
+                        .map((a) => (
+                          <li key={a.email}>
+                            <button onClick={() => enter(a)} className="flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-2.5 text-left ring-1 ring-navy/[0.07] transition-colors hover:ring-lime-dark">
+                              <Avatar name={a.name} size={30} tone="navy" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[13.5px] font-semibold">{a.name}</span>
+                                <span className="block truncate text-[12px] text-navy/50">{a.label}</span>
+                              </span>
+                              <ArrowRight size={14} className="text-navy/30" />
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
-
-      <AppFooter />
     </div>
   )
 }

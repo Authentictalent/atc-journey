@@ -28,7 +28,9 @@ export function TeamTab({ project }: { project: Project }) {
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
       <div className="grid gap-3 sm:grid-cols-2">
-        {state.assessors.map((a) => {
+        {state.assessors
+          .filter((a) => a.active || project.leadAssessorId === a.id || project.secondAssessorIds.includes(a.id))
+          .map((a) => {
           const isLead = project.leadAssessorId === a.id
           const isSecond = project.secondAssessorIds.includes(a.id)
           const exercises = project.exercises.filter((e) => e.assessorId === a.id)

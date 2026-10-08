@@ -2,21 +2,25 @@
 
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
-import { Check, LockOpen, Mail, Send, UserRound } from 'lucide-react'
+import { CalendarDays, Check, LockOpen, Mail, Send, UserRound, Video } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { COMPETENCIES, POST_QUESTIONS, PRE_QUESTIONS, SCALE, competencyById } from '@/lib/catalog'
 import { fmtDate, fmtTime } from '@/lib/dates'
-import { features, fullName, gridKey, journey } from '@/lib/project'
+import { features, fullName, gridKey, journey, venueLabel } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import { JourneyTrack } from '@/components/JourneyTrack'
 import { Button, EmptyState, PageHeader, Pill, SectionTitle } from '@/components/ui'
-import { UnlockFeedbackDialog } from '@/components/cdp/ParticipantsTab'
+import { SlotCell, UnlockFeedbackDialog } from '@/components/cdp/ParticipantsTab'
+import { SlotDialog } from '@/components/cdp/SlotDialog'
+import { WelcomeEmailDialog } from '@/components/cdp/WelcomeEmailDialog'
 
 export default function ParticipantProfile() {
   const { id, pid } = useParams<{ id: string; pid: string }>()
   const { state } = useStore()
   const [unlocking, setUnlocking] = useState(false)
   const [reminded, setReminded] = useState(false)
+  const [slotOpen, setSlotOpen] = useState(false)
+  const [mailOpen, setMailOpen] = useState(false)
 
   const project = state.projects.find((p) => p.id === id)
   const p = state.participants.find((x) => x.id === pid)
@@ -37,7 +41,7 @@ export default function ParticipantProfile() {
   return (
     <>
       <PageHeader
-        back={{ href: `/cdp/projets/${project.id}?onglet=participants`, label: `${project.client} · ${w.participants}` }}
+        back={{ href: `/projets/${project.id}?onglet=participants`, label: `${project.client} · ${w.participants}` }}
         eyebrow={`${w.participant} · ${project.client}`}
         tone="peach"
         title={fullName(p)}
@@ -50,7 +54,11 @@ export default function ParticipantProfile() {
           </span>
         }
         actions={
-          pending && pending.key !== 'day' && pending.key !== 'feedback' ? (
+          <>
+            <Button variant={p.welcomeSentAt ? 'outline' : 'lime'} size="sm" onClick={() => setMailOpen(true)}>
+              <Mail size={14} /> {p.welcomeSentAt ? 'Mail de bienvenue' : 'Envoyer le mail de bienvenue'}
+            </Button>
+          {pending && !['day', 'feedback', 'invitation', 'date'].includes(pending.key) ? (
             <Button variant={reminded ? 'ghost' : 'outline'} size="sm" onClick={() => setReminded(true)} disabled={reminded}>
               {reminded ? (
                 <>
@@ -62,7 +70,8 @@ export default function ParticipantProfile() {
                 </>
               )}
             </Button>
-          ) : undefined
+          ) : null}
+          </>
         }
       />
 
@@ -108,7 +117,7 @@ export default function ParticipantProfile() {
                         {SCALE.map((s) => (
                           <span key={s.value} className={`h-2 w-7 rounded-full ${entry?.score && s.value <= entry.score ? 'bg-lime-dark' : 'bg-navy/[0.08]'}`} />
                         ))}
-                        <span className="tabular ml-2 w-20 text-right text-[12.5px] text-navy/55">{entry?.score ? SCALE[entry.score - 1].label : '—'}</span>
+                        <span className="tabular ml-2 w-20 text-right text-[12.5px] text-navy/55">{entry?.score ? SCALE[entry.score - 1].label : 'Non évalué'}</span>
                       </div>
                     </div>
                   ))}
@@ -137,6 +146,25 @@ export default function ParticipantProfile() {
           </div>
 
           <aside className="space-y-4">
+            <div className="card p-6">
+              <p className="eyebrow eyebrow--lime">Date de la journée</p>
+              <div className="mt-3">
+                <SlotCell participant={p} onOpen={() => setSlotOpen(true)} />
+              </div>
+              {p.slot.status === 'confirmed' && p.slot.confirmed && (
+                <p className="mt-2 flex items-center gap-2 text-[13px] text-navy/55">
+                  <CalendarDays size={14} /> {fmtDate(p.slot.confirmed.date)}
+                </p>
+              )}
+              <div className="tick-rule my-5" />
+              <p className="text-[13.5px] text-navy/65">{venueLabel(project)}</p>
+              {p.teamsUrl && (
+                <a href={p.teamsUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-teal-dark hover:underline">
+                  <Video size={14} /> Lien Teams de sa journée
+                </a>
+              )}
+            </div>
+
             <div className="card p-6">
               <p className="eyebrow eyebrow--lime">Inventaires Hogan</p>
               <p className="mt-3 text-[15px] font-semibold">{p.hogan === 'done' ? 'Complétés' : 'En attente'}</p>
@@ -184,6 +212,8 @@ export default function ParticipantProfile() {
       </div>
 
       <UnlockFeedbackDialog participant={unlocking ? p : null} onClose={() => setUnlocking(false)} />
+      <SlotDialog project={project} participant={slotOpen ? p : null} onClose={() => setSlotOpen(false)} />
+      <WelcomeEmailDialog project={project} participant={mailOpen ? p : null} onClose={() => setMailOpen(false)} />
     </>
   )
 }

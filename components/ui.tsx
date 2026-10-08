@@ -79,7 +79,7 @@ const variants: Record<Variant, string> = {
 
 function btnClass(variant: Variant, size: 'sm' | 'md' | 'lg', className?: string) {
   return cx(
-    'stadium inline-flex items-center justify-center gap-2 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+    'stadium inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40',
     size === 'sm' && 'px-3.5 py-1.5 text-[12.5px]',
     size === 'md' && 'px-5 py-2.5 text-[14px]',
     size === 'lg' && 'px-7 py-3.5 text-[15px]',
@@ -287,7 +287,7 @@ export function Dialog({ open, onClose, title, eyebrow, children }: { open: bool
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="rise-in w-full max-w-lg rounded-3xl bg-white p-7 shadow-[0_30px_80px_-20px_rgba(0,26,51,0.5)]"
+        className="rise-in max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-7 shadow-[0_30px_80px_-20px_rgba(0,26,51,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">

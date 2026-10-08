@@ -59,3 +59,9 @@ export function fmtDuration(minutes: number) {
 export function fmtTimestamp(iso: string) {
   return new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
+
+/** Décale au lundi suivant une date qui tombe un week-end. */
+export function businessDay(iso: string) {
+  const day = parse(iso).getDay()
+  return day === 6 ? addDays(iso, 2) : day === 0 ? addDays(iso, 1) : iso
+}

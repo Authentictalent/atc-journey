@@ -133,10 +133,12 @@ export interface FormatPreset {
   features: { preQuestionnaire: boolean; postQuestionnaire: boolean; grid: boolean; feedback: boolean }
 }
 
+export const LIGHT_DURATIONS = [90, 120]
+
 export const FORMATS: Record<Format, FormatPreset> = {
   light: {
     label: 'Light',
-    length: '1 h 30 à 2 h',
+    length: '1 h 30 ou 2 h',
     description: 'Un entretien approfondi mené par un assesseur, appuyé sur le Hogan.',
     defaultExercises: [{ catalogId: 'entretien', duration: 90 }],
     minSeconds: 0,

@@ -1,14 +1,19 @@
-import { addDays, todayISO } from './dates'
-import type { AppState, Assessor, Participant, Project } from './types'
+import { addDays, businessDay, todayISO } from './dates'
+import { teamsLink } from './project'
+import type { AppState, Assessor, Participant, Project, Slot, User } from './types'
 
-export const DEMO_CDP = { name: 'Camille Laurent', title: 'Cheffe de projet' }
+const users: User[] = [
+  { id: 'u-margaux', name: 'Margaux Lefort', email: 'margaux.lefort@authentictalent.fr', role: 'admin', title: 'Directrice des opérations', active: true },
+  { id: 'u-camille', name: 'Camille Laurent', email: 'camille.laurent@authentictalent.fr', role: 'cdp', title: 'Cheffe de projet', active: true },
+  { id: 'u-julie', name: 'Julie Mercier', email: 'julie.mercier@authentictalent.fr', role: 'cdp', title: 'Cheffe de projet', active: true },
+]
 
 const assessors: Assessor[] = [
-  { id: 'a-sophie', name: 'Sophie Durand', title: 'Associée · Lead assesseure', email: 'sophie.durand@authentictalent.fr' },
-  { id: 'a-thomas', name: 'Thomas Bernard', title: 'Consultant senior', email: 'thomas.bernard@authentictalent.fr' },
-  { id: 'a-nadia', name: 'Nadia Benali', title: 'Associée · Lead assesseure', email: 'nadia.benali@authentictalent.fr' },
-  { id: 'a-julien', name: 'Julien Morel', title: 'Consultant', email: 'julien.morel@authentictalent.fr' },
-  { id: 'a-ines', name: 'Inès Garnier', title: 'Consultante senior', email: 'ines.garnier@authentictalent.fr' },
+  { id: 'a-sophie', name: 'Sophie Durand', title: 'Associée · Lead assesseure', email: 'sophie.durand@authentictalent.fr', active: true },
+  { id: 'a-thomas', name: 'Thomas Bernard', title: 'Consultant senior', email: 'thomas.bernard@authentictalent.fr', active: true },
+  { id: 'a-nadia', name: 'Nadia Benali', title: 'Associée · Lead assesseure', email: 'nadia.benali@authentictalent.fr', active: true },
+  { id: 'a-julien', name: 'Julien Morel', title: 'Consultant', email: 'julien.morel@authentictalent.fr', active: true },
+  { id: 'a-ines', name: 'Inès Garnier', title: 'Consultante senior', email: 'ines.garnier@authentictalent.fr', active: true },
 ]
 
 const blank = {
@@ -16,24 +21,30 @@ const blank = {
   postAnswers: {},
   postQuestionnaire: 'todo' as const,
   feedback: { status: 'locked' as const },
+  dayProgress: -1,
 }
+
+const todo = (): Slot => ({ status: 'todo', proposals: [], counter: [] })
+const confirmed = (date: string, time: string): Slot => ({ status: 'confirmed', proposals: [], counter: [], confirmed: { date, time } })
 
 export function buildSeed(): AppState {
   const today = todayISO()
+  const d = (n: number) => businessDay(addDays(today, n))
 
   const projects: Project[] = [
     {
       id: 'pr-sanofi',
+      cdpId: 'u-camille',
       purpose: 'AC',
       format: 'robuste',
       client: 'Sanofi',
       position: 'Directeur·rice des Opérations industrielles',
       sponsorName: 'Marc Lefèvre',
       sponsorTitle: 'DRH Affaires industrielles',
-      date: today,
+      sponsorEmail: 'marc.lefevre@exemple.fr',
+      period: 'Octobre 2026',
       startTime: '09:00',
-      location: 'Distanciel · Microsoft Teams',
-      teamsUrl: 'https://teams.microsoft.com/l/meetup-join/atc-sanofi',
+      venue: { mode: 'teams', address: '' },
       exercises: [
         { id: 'ex-s1', catalogId: 'entretien', duration: 60, assessorId: 'a-sophie' },
         { id: 'ex-s2', catalogId: 'etude-cas', duration: 75, assessorId: 'a-thomas' },
@@ -46,16 +57,17 @@ export function buildSeed(): AppState {
     },
     {
       id: 'pr-orange',
+      cdpId: 'u-camille',
       purpose: 'DC',
       format: 'premium',
       client: 'Orange',
       position: 'Programme Leaders de demain',
       sponsorName: 'Hélène Roussel',
       sponsorTitle: 'Directrice Talents & Développement',
-      date: addDays(today, 12),
+      sponsorEmail: 'helene.roussel@exemple.fr',
+      period: 'Novembre 2026',
       startTime: '08:45',
-      location: 'Paris · Siège Orange',
-      teamsUrl: 'https://teams.microsoft.com/l/meetup-join/atc-orange',
+      venue: { mode: 'site', address: 'Paris · Siège Orange' },
       exercises: [
         { id: 'ex-o1', catalogId: 'entretien', duration: 60, assessorId: 'a-nadia' },
         { id: 'ex-o2', catalogId: 'in-basket', duration: 45, assessorId: 'a-sophie' },
@@ -72,16 +84,17 @@ export function buildSeed(): AppState {
     },
     {
       id: 'pr-safran',
+      cdpId: 'u-julie',
       purpose: 'AC',
       format: 'light',
       client: 'Safran',
       position: 'Responsable Achats Europe',
       sponsorName: 'Olivier Marchand',
       sponsorTitle: 'Directeur Achats Groupe',
-      date: addDays(today, 5),
+      sponsorEmail: 'olivier.marchand@exemple.fr',
+      period: '',
       startTime: '14:00',
-      location: 'Distanciel · Microsoft Teams',
-      teamsUrl: 'https://teams.microsoft.com/l/meetup-join/atc-safran',
+      venue: { mode: 'teams', address: '' },
       exercises: [{ id: 'ex-f1', catalogId: 'entretien', duration: 90, assessorId: null }],
       competencyIds: ['resultats', 'influence', 'decision'],
       leadAssessorId: null,
@@ -90,16 +103,17 @@ export function buildSeed(): AppState {
     },
     {
       id: 'pr-hermes',
+      cdpId: 'u-julie',
       purpose: 'AC',
       format: 'robuste',
       client: 'Hermès',
       position: 'Directeur·rice Retail France',
       sponsorName: 'Claire Vasseur',
       sponsorTitle: 'DRH Retail',
-      date: addDays(today, -9),
+      sponsorEmail: 'claire.vasseur@exemple.fr',
+      period: 'Septembre 2026',
       startTime: '09:00',
-      location: 'Paris · Faubourg Saint-Honoré',
-      teamsUrl: 'https://teams.microsoft.com/l/meetup-join/atc-hermes',
+      venue: { mode: 'site', address: 'Paris · Faubourg Saint-Honoré' },
       exercises: [
         { id: 'ex-h1', catalogId: 'entretien', duration: 60, assessorId: 'a-ines' },
         { id: 'ex-h2', catalogId: 'presentation', duration: 30, assessorId: 'a-thomas' },
@@ -122,6 +136,9 @@ export function buildSeed(): AppState {
       email: 'jean.dupont@exemple.fr',
       currentRole: 'Directeur de site · Le Trait',
       invitedAt: addDays(today, -21),
+      welcomeSentAt: addDays(today, -21),
+      slot: confirmed(today, '09:00'),
+      teamsUrl: teamsLink(),
       hogan: 'done',
       preQuestionnaire: 'done',
       preAnswers: {
@@ -130,7 +147,6 @@ export function buildSeed(): AppState {
         motivation: "Passer d'un site à une vision multi-sites et contribuer à la stratégie industrielle.",
         attentes: 'Un regard extérieur sur mes forces et mes angles morts.',
       },
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -141,9 +157,11 @@ export function buildSeed(): AppState {
       email: 'amelie.roux@exemple.fr',
       currentRole: 'Directrice supply chain Europe',
       invitedAt: addDays(today, -21),
+      welcomeSentAt: addDays(today, -21),
+      slot: confirmed(today, '13:30'),
+      teamsUrl: teamsLink(),
       hogan: 'done',
       preQuestionnaire: 'done',
-      dayProgress: 1,
     },
     {
       ...blank,
@@ -153,10 +171,11 @@ export function buildSeed(): AppState {
       lastName: 'Haddad',
       email: 'karim.haddad@exemple.fr',
       currentRole: 'Responsable industrialisation',
-      invitedAt: addDays(today, -19),
+      invitedAt: addDays(today, -10),
+      welcomeSentAt: addDays(today, -10),
+      slot: { status: 'proposed', proposals: [{ date: d(6), time: '09:00' }, { date: d(7), time: '09:00' }, { date: d(9), time: '13:30' }], counter: [] },
       hogan: 'done',
       preQuestionnaire: 'todo',
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -167,9 +186,10 @@ export function buildSeed(): AppState {
       email: 'leila.mansouri@exemple.fr',
       currentRole: 'Head of B2B Marketing',
       invitedAt: addDays(today, -6),
+      welcomeSentAt: addDays(today, -6),
+      slot: { status: 'proposed', proposals: [{ date: d(14), time: '08:45' }, { date: d(15), time: '08:45' }, { date: d(21), time: '08:45' }], counter: [] },
       hogan: 'done',
       preQuestionnaire: 'todo',
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -180,9 +200,14 @@ export function buildSeed(): AppState {
       email: 'paul.girard@exemple.fr',
       currentRole: 'Directeur des opérations réseau Sud',
       invitedAt: addDays(today, -6),
+      welcomeSentAt: addDays(today, -6),
+      slot: {
+        status: 'counter',
+        proposals: [{ date: d(14), time: '08:45' }, { date: d(15), time: '08:45' }],
+        counter: [{ date: d(22), time: '08:45' }, { date: d(23), time: '08:45' }],
+      },
       hogan: 'todo',
       preQuestionnaire: 'todo',
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -193,9 +218,10 @@ export function buildSeed(): AppState {
       email: 'ines.faure@exemple.fr',
       currentRole: 'Responsable transformation digitale',
       invitedAt: addDays(today, -6),
+      welcomeSentAt: addDays(today, -6),
+      slot: confirmed(d(15), '08:45'),
       hogan: 'done',
       preQuestionnaire: 'done',
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -205,10 +231,10 @@ export function buildSeed(): AppState {
       lastName: 'Lemaire',
       email: 'hugo.lemaire@exemple.fr',
       currentRole: 'Product Owner senior',
-      invitedAt: addDays(today, -6),
+      invitedAt: addDays(today, -1),
+      slot: todo(),
       hogan: 'todo',
       preQuestionnaire: 'todo',
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -218,10 +244,10 @@ export function buildSeed(): AppState {
       lastName: 'Martin',
       email: 'clara.martin@exemple.fr',
       currentRole: 'Acheteuse famille senior',
-      invitedAt: addDays(today, -3),
+      invitedAt: today,
+      slot: todo(),
       hogan: 'todo',
       preQuestionnaire: 'todo',
-      dayProgress: -1,
     },
     {
       ...blank,
@@ -232,6 +258,8 @@ export function buildSeed(): AppState {
       email: 'lucas.petit@exemple.fr',
       currentRole: 'Directeur régional Retail Ouest',
       invitedAt: addDays(today, -35),
+      welcomeSentAt: addDays(today, -35),
+      slot: confirmed(addDays(today, -9), '09:00'),
       hogan: 'done',
       preQuestionnaire: 'done',
       dayProgress: 3,
@@ -239,19 +267,12 @@ export function buildSeed(): AppState {
       postAnswers: { organisation: '5', exercices: '4', assesseurs: '5', ressenti: 'Exigeant mais bienveillant.' },
       feedback: {
         status: 'unlocked',
-        sessionDate: addDays(today, 3),
+        sessionDate: d(3),
         sessionTime: '10:00',
         summary:
           "Un leader engagé et fédérateur, qui inspire confiance à ses équipes. Votre capacité à porter une vision claire du client final est un atout marquant. L'enjeu des prochains mois : gagner en recul face à la pression opérationnelle pour déléguer davantage.",
-        strengths: [
-          'Une vision client incarnée et communicative',
-          "Une écoute réelle, qui crée l'engagement",
-          'Une grande solidité dans les échanges contradictoires',
-        ],
-        development: [
-          "Déléguer plus tôt les sujets opérationnels pour libérer du temps stratégique",
-          'Structurer davantage vos prises de parole devant un comité',
-        ],
+        strengths: ['Une vision client incarnée et communicative', "Une écoute réelle, qui crée l'engagement", 'Une grande solidité dans les échanges contradictoires'],
+        development: ['Déléguer plus tôt les sujets opérationnels pour libérer du temps stratégique', 'Structurer davantage vos prises de parole devant un comité'],
       },
     },
     {
@@ -263,6 +284,8 @@ export function buildSeed(): AppState {
       email: 'sarah.cohen@exemple.fr',
       currentRole: 'Directrice de boutique · Paris',
       invitedAt: addDays(today, -35),
+      welcomeSentAt: addDays(today, -35),
+      slot: confirmed(addDays(today, -8), '09:00'),
       hogan: 'done',
       preQuestionnaire: 'done',
       dayProgress: 3,
@@ -274,13 +297,14 @@ export function buildSeed(): AppState {
   return {
     seededOn: today,
     session: null,
+    users,
     projects,
     participants,
     assessors,
     notes: {
       'pa-sarah:ex-h1:a-ines': {
         text: "Exemples précis et chiffrés. Situation STAR très claire sur la refonte de l'expérience client en boutique.",
-        updatedAt: `${addDays(today, -9)}T10:05:00`,
+        updatedAt: `${addDays(today, -8)}T10:05:00`,
       },
     },
     grid: {
@@ -294,13 +318,20 @@ export function buildSeed(): AppState {
 /** Décale toutes les dates de la démo pour qu'elle reste vivante d'un jour à l'autre. */
 export function shiftDemo(state: AppState, days: number): AppState {
   if (!days) return state
+  const shift = (o: { date: string; time: string }) => ({ ...o, date: addDays(o.date, days) })
   return {
     ...state,
     seededOn: addDays(state.seededOn, days),
-    projects: state.projects.map((p) => ({ ...p, date: addDays(p.date, days) })),
     participants: state.participants.map((p) => ({
       ...p,
       invitedAt: addDays(p.invitedAt, days),
+      welcomeSentAt: p.welcomeSentAt && addDays(p.welcomeSentAt, days),
+      slot: {
+        ...p.slot,
+        proposals: p.slot.proposals.map(shift),
+        counter: p.slot.counter.map(shift),
+        confirmed: p.slot.confirmed && shift(p.slot.confirmed),
+      },
       feedback: p.feedback.sessionDate ? { ...p.feedback, sessionDate: addDays(p.feedback.sessionDate, days) } : p.feedback,
     })),
   }

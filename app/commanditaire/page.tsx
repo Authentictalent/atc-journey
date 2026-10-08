@@ -4,9 +4,8 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { CalendarDays, Check, Clock, MapPin, ShieldCheck } from 'lucide-react'
 import { useStore } from '@/lib/store'
-import { DEMO_CDP } from '@/lib/seed'
-import { fmtDate, fmtShort, fmtTime, relativeDay } from '@/lib/dates'
-import { endTime, features, fullName, isDayDone, PHASE_LABEL, phaseOf, projectParticipants } from '@/lib/project'
+import { fmtDate, fmtDuration, fmtShort, relativeDay } from '@/lib/dates'
+import { features, fullName, isDayDone, nextDate, PHASE_LABEL, phaseOf, projectParticipants, venueLabel } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import { Avatar, FormatPill, PageHeader, Pill, PurposePill, Stat, cx } from '@/components/ui'
 
@@ -38,6 +37,8 @@ export default function SponsorPage() {
   const f = features(project)
   const phase = phaseOf(project, participants)
   const n = participants.length
+  const next = nextDate(participants)
+  const cdp = state.users.find((u) => u.id === project.cdpId)
   const count = (fn: (p: (typeof participants)[number]) => boolean) => participants.filter(fn).length
 
   return (
@@ -100,7 +101,7 @@ export default function SponsorPage() {
                       </td>
                     )}
                     <td className="px-3 py-4">
-                      <Status done={isDayDone(project, p)} label={isDayDone(project, p) ? 'Réalisé' : fmtShort(project.date)} />
+                      <Status done={isDayDone(project, p)} label={isDayDone(project, p) ? 'Réalisé' : p.slot.confirmed ? fmtShort(p.slot.confirmed.date) : 'Date à fixer'} />
                     </td>
                     {f.postQuestionnaire && (
                       <td className="px-3 py-4">
@@ -123,18 +124,24 @@ export default function SponsorPage() {
 
           <aside className="space-y-4">
             <div className="card p-6">
-              <p className="eyebrow eyebrow--lime">La journée</p>
-              <p className="mt-3 font-heading text-[21px] font-medium leading-snug">{fmtDate(project.date)}</p>
-              <p className="text-[13px] text-navy/55">{relativeDay(project.date)}</p>
+              <p className="eyebrow eyebrow--lime">Organisation</p>
+              {next ? (
+                <>
+                  <p className="mt-3 font-heading text-[21px] font-medium leading-snug first-letter:uppercase">{fmtDate(next)}</p>
+                  <p className="text-[13px] text-navy/55">Prochaine journée · {relativeDay(next)}</p>
+                </>
+              ) : (
+                <p className="mt-3 font-heading text-[19px] font-medium leading-snug">{project.period || 'Dates en cours de planification'}</p>
+              )}
               <ul className="mt-4 space-y-2.5 text-[14px]">
                 <li className="flex items-center gap-3">
-                  <Clock size={15} className="text-navy/40" /> {fmtTime(project.startTime)} – {fmtTime(endTime(project))}
+                  <Clock size={15} className="shrink-0 text-navy/40" /> {fmtDuration(project.exercises.reduce((s, e) => s + e.duration, 0))} d’exercices par {w.participant.toLowerCase()}
                 </li>
                 <li className="flex items-center gap-3">
-                  <MapPin size={15} className="text-navy/40" /> {project.location}
+                  <MapPin size={15} className="shrink-0 text-navy/40" /> {venueLabel(project)}
                 </li>
                 <li className="flex items-center gap-3">
-                  <CalendarDays size={15} className="text-navy/40" /> Debrief avec ATC : {project.debriefClientDone ? 'réalisé' : 'à planifier après la journée'}
+                  <CalendarDays size={15} className="text-navy/40" /> Debrief avec ATC : {project.debriefClientDone ? 'réalisé' : 'après les journées'}
                 </li>
               </ul>
             </div>
@@ -143,7 +150,7 @@ export default function SponsorPage() {
               <ShieldCheck size={20} className="text-lime" />
               <p className="mt-3 text-[15px] font-semibold">Confidentialité des évaluations</p>
               <p className="mt-1.5 text-[13.5px] leading-relaxed text-white/60">
-                Vous suivez l’avancement. Les observations et résultats vous sont restitués par {DEMO_CDP.name} et le lead assesseur lors du debrief.
+                Vous suivez l’avancement. Les observations et résultats vous sont restitués par {cdp?.name ?? 'votre cheffe de projet'} et le lead assesseur lors du debrief.
               </p>
             </div>
           </aside>

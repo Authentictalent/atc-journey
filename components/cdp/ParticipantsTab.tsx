@@ -2,13 +2,48 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Check, ChevronRight, LockOpen, UserPlus } from 'lucide-react'
+import { CalendarDays, Check, ChevronRight, LockOpen, Mail, UserPlus } from 'lucide-react'
 import { uid, useStore } from '@/lib/store'
 import { addDays, fmtShort, todayISO } from '@/lib/dates'
-import { features, fullName, isDayDone, phaseOf } from '@/lib/project'
+import { features, fmtSlot, fullName, isDayDone, phaseOf } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import type { Participant, Project } from '@/lib/types'
 import { Avatar, Button, Dialog, EmptyState, Field, Pill, cx } from '@/components/ui'
+import { SlotDialog } from './SlotDialog'
+import { WelcomeEmailDialog } from './WelcomeEmailDialog'
+
+export function SlotCell({ participant: p, onOpen }: { participant: Participant; onOpen: () => void }) {
+  switch (p.slot.status) {
+    case 'todo':
+      return (
+        <Button size="sm" variant="outline" onClick={onOpen}>
+          <CalendarDays size={13} /> Proposer des dates
+        </Button>
+      )
+    case 'proposed':
+      return (
+        <button onClick={onOpen} className="text-left">
+          <Pill tone="teal" dot>
+            {p.slot.proposals.length} créneaux proposés
+          </Pill>
+          <span className="mt-1 block text-[12px] text-navy/45">En attente de son choix</span>
+        </button>
+      )
+    case 'counter':
+      return (
+        <Button size="sm" variant="lime" onClick={onOpen}>
+          Voir ses {p.slot.counter.length} dates
+        </Button>
+      )
+    case 'confirmed':
+      return (
+        <button onClick={onOpen} className="group/date text-left" title="Modifier la date">
+          <span className="block whitespace-nowrap text-[13.5px] font-semibold group-hover/date:underline">{p.slot.confirmed && fmtSlot(p.slot.confirmed)}</span>
+          <span className="block text-[12px] text-navy/45">Confirmée</span>
+        </button>
+      )
+  }
+}
 
 function Mark({ done, label }: { done: boolean; label: string }) {
   return (
@@ -30,6 +65,8 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
   const phase = phaseOf(project, participants)
   const [adding, setAdding] = useState(false)
   const [unlocking, setUnlocking] = useState<Participant | null>(null)
+  const [slotFor, setSlotFor] = useState<Participant | null>(null)
+  const [mailFor, setMailFor] = useState<Participant | null>(null)
 
   const columns = [
     { key: 'hogan', label: 'Hogan', done: (p: Participant) => p.hogan === 'done' },
@@ -42,7 +79,7 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-[14px] text-navy/60">
-          {participants.length} {participants.length > 1 ? w.participants.toLowerCase() : w.participant.toLowerCase()} · les scores Hogan ne sont jamais affichés aux participants.
+          {participants.length} {participants.length > 1 ? w.participants.toLowerCase() : w.participant.toLowerCase()} · cliquez sur une date pour la proposer, la confirmer ou la modifier.
         </p>
         <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
           <UserPlus size={14} /> Ajouter un {w.participant.toLowerCase()}
@@ -55,16 +92,18 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
         </EmptyState>
       ) : (
         <div className="card overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left">
+          <table className="w-full min-w-[960px] text-left">
             <thead>
               <tr className="border-b border-navy/[0.07] text-[11px] font-semibold uppercase tracking-wider text-navy/45">
                 <th className="px-6 py-4 font-semibold">{w.participant}</th>
+                <th className="px-3 py-4 font-semibold">Date</th>
                 {columns.map((c) => (
                   <th key={c.key} className="px-3 py-4 text-center font-semibold">
                     {c.label}
                   </th>
                 ))}
                 {f.feedback && <th className="px-3 py-4 font-semibold">Feedback</th>}
+                <th className="px-3 py-4 text-center font-semibold">Mail</th>
                 <th className="w-10" />
               </tr>
             </thead>
@@ -72,13 +111,16 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
               {participants.map((p) => (
                 <tr key={p.id} className="group transition-colors hover:bg-cream-warm">
                   <td className="px-6 py-4">
-                    <Link href={`/cdp/projets/${project.id}/participants/${p.id}`} className="flex items-center gap-3">
+                    <Link href={`/projets/${project.id}/participants/${p.id}`} className="flex items-center gap-3">
                       <Avatar name={fullName(p)} size={36} tone="navy" />
                       <span>
                         <span className="block text-[14.5px] font-semibold group-hover:underline">{fullName(p)}</span>
                         <span className="block text-[12.5px] text-navy/50">{p.currentRole}</span>
                       </span>
                     </Link>
+                  </td>
+                  <td className="px-3 py-4">
+                    <SlotCell participant={p} onOpen={() => setSlotFor(p)} />
                   </td>
                   {columns.map((c) => (
                     <td key={c.key} className="px-3 py-4 text-center">
@@ -100,8 +142,18 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
                       )}
                     </td>
                   )}
+                  <td className="px-3 py-4 text-center">
+                    <button
+                      onClick={() => setMailFor(p)}
+                      title={p.welcomeSentAt ? 'Mail de bienvenue envoyé' : 'Mail de bienvenue à envoyer'}
+                      aria-label={`Mail de bienvenue de ${fullName(p)}`}
+                      className={cx('stadium inline-flex h-8 w-8 items-center justify-center transition-colors', p.welcomeSentAt ? 'bg-lime-pale text-lime-dark hover:bg-lime' : 'bg-peach-pale text-peach-dark ring-1 ring-peach/50 hover:bg-peach hover:text-white')}
+                    >
+                      {p.welcomeSentAt ? <Check size={14} strokeWidth={3} /> : <Mail size={14} />}
+                    </button>
+                  </td>
                   <td className="pr-4">
-                    <Link href={`/cdp/projets/${project.id}/participants/${p.id}`} aria-label={`Voir ${fullName(p)}`} className="text-navy/30 hover:text-navy">
+                    <Link href={`/projets/${project.id}/participants/${p.id}`} aria-label={`Voir ${fullName(p)}`} className="text-navy/30 hover:text-navy">
                       <ChevronRight size={18} />
                     </Link>
                   </td>
@@ -114,6 +166,8 @@ export function ParticipantsTab({ project, participants }: { project: Project; p
 
       <AddParticipantDialog open={adding} onClose={() => setAdding(false)} project={project} />
       <UnlockFeedbackDialog participant={unlocking} onClose={() => setUnlocking(null)} />
+      <SlotDialog project={project} participant={slotFor} onClose={() => setSlotFor(null)} />
+      <WelcomeEmailDialog project={project} participant={mailFor} onClose={() => setMailFor(null)} />
     </div>
   )
 }
@@ -133,6 +187,7 @@ function AddParticipantDialog({ open, onClose, project }: { open: boolean; onClo
         projectId: project.id,
         ...form,
         invitedAt: todayISO(),
+        slot: { status: 'todo', proposals: [], counter: [] },
         hogan: 'todo',
         preQuestionnaire: 'todo',
         preAnswers: {},
@@ -162,13 +217,13 @@ function AddParticipantDialog({ open, onClose, project }: { open: boolean; onClo
           <input className="field" value={form.currentRole} onChange={(e) => setForm({ ...form, currentRole: e.target.value })} />
         </Field>
       </div>
-      <p className="mt-4 text-[12.5px] text-navy/50">L’invitation au parcours est envoyée dès l’ajout.</p>
+      <p className="mt-4 text-[12.5px] text-navy/50">Vous pourrez ensuite lui envoyer le mail de bienvenue et lui proposer des dates.</p>
       <div className="mt-6 flex justify-end gap-2">
         <Button variant="ghost" onClick={onClose}>
           Annuler
         </Button>
         <Button onClick={submit} disabled={!valid}>
-          Ajouter et inviter
+          Ajouter
         </Button>
       </div>
     </Dialog>

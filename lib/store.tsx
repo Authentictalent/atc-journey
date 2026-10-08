@@ -3,14 +3,19 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
 import { daysBetween, todayISO } from './dates'
 import { buildSeed, shiftDemo } from './seed'
-import type { AppState, Feedback, GridEntry, Participant, Project, Session } from './types'
+import type { AppState, Assessor, Feedback, GridEntry, Participant, Project, Session, User } from './types'
 
-const STORAGE_KEY = 'atc-journey-demo-v1'
+const STORAGE_KEY = 'atc-journey-demo-v2'
 
 type Action =
   | { type: 'hydrate'; state: AppState }
   | { type: 'reset' }
   | { type: 'signIn'; session: Session }
+  | { type: 'signOut' }
+  | { type: 'addUser'; user: User }
+  | { type: 'updateUser'; id: string; patch: Partial<User> }
+  | { type: 'addAssessor'; assessor: Assessor }
+  | { type: 'updateAssessor'; id: string; patch: Partial<Assessor> }
   | { type: 'createProject'; project: Project; participants: Participant[] }
   | { type: 'updateProject'; id: string; patch: Partial<Project> }
   | { type: 'addParticipant'; participant: Participant }
@@ -29,6 +34,16 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...buildSeed(), session: state.session }
     case 'signIn':
       return { ...state, session: action.session }
+    case 'signOut':
+      return { ...state, session: null }
+    case 'addUser':
+      return { ...state, users: [...state.users, action.user] }
+    case 'updateUser':
+      return { ...state, users: state.users.map((u) => (u.id === action.id ? { ...u, ...action.patch } : u)) }
+    case 'addAssessor':
+      return { ...state, assessors: [...state.assessors, action.assessor] }
+    case 'updateAssessor':
+      return { ...state, assessors: state.assessors.map((a) => (a.id === action.id ? { ...a, ...action.patch } : a)) }
     case 'createProject':
       return {
         ...state,

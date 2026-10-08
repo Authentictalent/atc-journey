@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, Plus, Trash } from 'lucide-react'
 import { uid, useStore } from '@/lib/store'
-import { EXERCISES } from '@/lib/catalog'
+import { EXERCISES, LIGHT_DURATIONS } from '@/lib/catalog'
 import { fmtDuration, fmtTime } from '@/lib/dates'
 import { endTime, schedule } from '@/lib/project'
 import type { Project, ProjectExercise } from '@/lib/types'
@@ -41,7 +41,7 @@ export function PlanningTab({ project }: { project: Project }) {
       <div>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <label className="flex items-center gap-3 text-[14px]">
-            <span className="font-semibold">Début de la journée</span>
+            <span className="font-semibold">Début habituel</span>
             <input
               type="time"
               value={project.startTime}
@@ -50,7 +50,7 @@ export function PlanningTab({ project }: { project: Project }) {
             />
           </label>
           <p className="text-[13px] text-navy/55">
-            Fin prévue à <span className="font-semibold text-navy">{fmtTime(endTime(project))}</span> · transitions de 10 min incluses
+            Fin vers <span className="font-semibold text-navy">{fmtTime(endTime(project))}</span> · transitions de 10 min incluses · chaque candidat peut avoir sa propre heure
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export function PlanningTab({ project }: { project: Project }) {
                     onChange={(e) => patch(s.id, { duration: Number(e.target.value) })}
                     className="field !w-auto !rounded-full !py-1.5 !text-[13px]"
                   >
-                    {Array.from(new Set([...DURATIONS, s.duration]))
+                    {Array.from(new Set(isLight ? LIGHT_DURATIONS : [...DURATIONS, s.duration]))
                       .sort((a, b) => a - b)
                       .map((d) => (
                         <option key={d} value={d}>
@@ -106,7 +106,7 @@ export function PlanningTab({ project }: { project: Project }) {
                       </optgroup>
                       <optgroup label="Autres assesseurs ATC">
                         {state.assessors
-                          .filter((a) => !team.includes(a.id))
+                          .filter((a) => !team.includes(a.id) && a.active)
                           .map((a) => (
                             <option key={a.id} value={a.id}>
                               {a.name}
@@ -145,7 +145,7 @@ export function PlanningTab({ project }: { project: Project }) {
         </ol>
 
         {isLight ? (
-          <p className="mt-5 text-[13px] text-navy/55">Le format Light repose sur un entretien seul : vous pouvez ajuster sa durée et son assesseur.</p>
+          <p className="mt-5 text-[13px] text-navy/55">Le format Light repose sur un entretien seul, de 1 h 30 ou 2 h : choisissez sa durée et son assesseur.</p>
         ) : (
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <select value={adding} onChange={(e) => setAdding(e.target.value)} className="field !w-auto !rounded-full !py-2 !text-[13.5px]" aria-label="Exercice à ajouter">

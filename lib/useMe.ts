@@ -9,5 +9,6 @@ export function useMe() {
   const participant = state.participants.find((p) => p.id === state.session?.participantId)
   const project = state.projects.find((p) => p.id === participant?.projectId)
   if (!participant || !project) return null
-  return { state, dispatch, participant, project, w: wording(project.purpose), f: features(project) }
+  const cdp = state.users.find((u) => u.id === project.cdpId)
+  return { state, dispatch, participant, project, cdp, w: wording(project.purpose), f: features(project) }
 }

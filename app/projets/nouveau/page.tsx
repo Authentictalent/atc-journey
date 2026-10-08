@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, Plus, Trash, UserPlus } from 'lucide-react'
 import { uid, useStore } from '@/lib/store'
-import { COMPETENCIES, EXERCISES, FORMATS, exerciseById } from '@/lib/catalog'
-import { addDays, fmtDate, fmtDuration, fmtTime, todayISO } from '@/lib/dates'
-import { endTime, schedule } from '@/lib/project'
+import { COMPETENCIES, EXERCISES, FORMATS, LIGHT_DURATIONS, exerciseById } from '@/lib/catalog'
+import { fmtDuration, fmtTime, todayISO } from '@/lib/dates'
+import { endTime, schedule, venueLabel } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import type { Format, Participant, Project, ProjectExercise, Purpose } from '@/lib/types'
 import { Avatar, Button, ExerciseIcon, Field, FormatPill, PageHeader, PurposePill, cx } from '@/components/ui'
+import { VenueFields } from '@/components/cdp/OverviewTab'
 
 const STEPS = ['Cadre', 'Exercices', 'Participants', 'Équipe', 'Récapitulatif'] as const
 
@@ -35,10 +36,11 @@ export default function NewProjectPage() {
     position: '',
     sponsorName: '',
     sponsorTitle: '',
-    date: addDays(todayISO(), 21),
     startTime: '09:00',
-    location: 'Distanciel · Microsoft Teams',
-    teamsUrl: '',
+    venue: { mode: 'teams', address: '' },
+    period: '',
+    sponsorEmail: '',
+    cdpId: state.session?.role === 'cdp' ? (state.session.userId ?? '') : (state.users.find((u) => u.role === 'cdp' && u.active)?.id ?? ''),
     exercises: presetExercises('robuste'),
     competencyIds: ['vision', 'leadership', 'resultats', 'influence'],
     leadAssessorId: null,
@@ -49,7 +51,9 @@ export default function NewProjectPage() {
   const [person, setPerson] = useState({ firstName: '', lastName: '', email: '', currentRole: '' })
   const [adding, setAdding] = useState('')
 
-  useEffect(() => window.scrollTo({ top: 0, behavior: 'smooth' }), [step])
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
 
   const w = wording(draft.purpose)
   const preset = FORMATS[draft.format]
@@ -57,7 +61,7 @@ export default function NewProjectPage() {
   const setFormat = (format: Format) => set({ format, exercises: presetExercises(format), secondAssessorIds: format === 'light' ? [] : draft.secondAssessorIds })
 
   const canContinue = [
-    draft.client.trim() && draft.position.trim() && draft.date && draft.startTime,
+    draft.client.trim() && draft.position.trim() && draft.startTime && draft.cdpId,
     draft.exercises.length > 0,
     true,
     !!draft.leadAssessorId,
@@ -98,6 +102,7 @@ export default function NewProjectPage() {
       email: p.email.trim(),
       currentRole: p.currentRole.trim(),
       invitedAt: todayISO(),
+      slot: { status: 'todo', proposals: [], counter: [] },
       hogan: 'todo',
       preQuestionnaire: 'todo',
       preAnswers: {},
@@ -108,15 +113,15 @@ export default function NewProjectPage() {
     }))
     dispatch({
       type: 'createProject',
-      project: { ...draft, id, exercises, teamsUrl: draft.teamsUrl || `https://teams.microsoft.com/l/meetup-join/${id}` },
+      project: { ...draft, id, exercises },
       participants,
     })
-    router.push(`/cdp/projets/${id}`)
+    router.push(`/projets/${id}`)
   }
 
   return (
     <>
-      <PageHeader back={{ href: '/cdp', label: 'Tous les dispositifs' }} eyebrow="Nouveau dispositif" tone="lime" title="Créer un projet" description="Cinq étapes pour cadrer le dispositif. Tout reste modifiable ensuite." />
+      <PageHeader back={{ href: '/projets', label: 'Tous les projets' }} eyebrow="Nouveau dispositif" tone="lime" title="Créer un projet" description="Cinq étapes pour cadrer le dispositif. Tout reste modifiable ensuite." />
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[240px_1fr]">
         {/* Étapes */}
@@ -207,18 +212,29 @@ export default function NewProjectPage() {
                   <Field label="Fonction du commanditaire">
                     <input className="field" value={draft.sponsorTitle} onChange={(e) => set({ sponsorTitle: e.target.value })} placeholder="Ex. DRH" />
                   </Field>
-                  <Field label="Date de la journée">
-                    <input type="date" className="field" value={draft.date} onChange={(e) => set({ date: e.target.value })} />
+                  <Field label="Email du commanditaire" className="sm:col-span-2" hint="Facultatif : lui ouvre l’accès à la vue de suivi.">
+                    <input type="email" className="field" value={draft.sponsorEmail} onChange={(e) => set({ sponsorEmail: e.target.value })} placeholder="prenom.nom@client.fr" />
                   </Field>
-                  <Field label="Heure de début">
+                  <Field label="Période envisagée" hint="Facultatif. Chaque date se fixe ensuite avec le candidat.">
+                    <input className="field" value={draft.period} onChange={(e) => set({ period: e.target.value })} placeholder="Ex. novembre 2026" />
+                  </Field>
+                  <Field label="Heure de début habituelle" hint="Modifiable pour chaque candidat.">
                     <input type="time" className="field" value={draft.startTime} onChange={(e) => set({ startTime: e.target.value })} />
                   </Field>
-                  <Field label="Lieu">
-                    <input className="field" value={draft.location} onChange={(e) => set({ location: e.target.value })} />
-                  </Field>
-                  <Field label="Lien Teams" hint="Généré automatiquement si laissé vide.">
-                    <input className="field" value={draft.teamsUrl} onChange={(e) => set({ teamsUrl: e.target.value })} placeholder="https://teams.microsoft.com/…" />
-                  </Field>
+                  <VenueFields value={draft.venue} onChange={(venue) => set({ venue })} />
+                  {state.session?.role === 'admin' && (
+                    <Field label="Cheffe de projet" className="sm:col-span-2">
+                      <select className="field" value={draft.cdpId} onChange={(e) => set({ cdpId: e.target.value })}>
+                        {state.users
+                          .filter((u) => u.role === 'cdp' && u.active)
+                          .map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name}
+                            </option>
+                          ))}
+                      </select>
+                    </Field>
+                  )}
                 </div>
               </div>
             )}
@@ -230,7 +246,7 @@ export default function NewProjectPage() {
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <p className="eyebrow">Planning · format {preset.label}</p>
                     <p className="text-[13px] text-navy/55">
-                      {fmtTime(draft.startTime)} – {fmtTime(endTime({ ...draft, id: 'draft' }))}
+                      {fmtTime(draft.startTime)} à {fmtTime(endTime({ ...draft, id: 'draft' }))}
                     </p>
                   </div>
                   <ol className="mt-4 space-y-2.5">
@@ -262,7 +278,22 @@ export default function NewProjectPage() {
                     ))}
                   </ol>
                   {draft.format === 'light' ? (
-                    <p className="mt-4 text-[13px] text-navy/55">Format Light : un entretien approfondi de {fmtDuration(draft.exercises[0]?.duration ?? 90)}.</p>
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <span className="text-[13.5px] text-navy/60">Durée de l’entretien</span>
+                      {LIGHT_DURATIONS.map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => set({ exercises: draft.exercises.map((e) => ({ ...e, duration: d })) })}
+                          aria-pressed={draft.exercises[0]?.duration === d}
+                          className={cx(
+                            'stadium px-4 py-1.5 text-[13.5px] transition-colors',
+                            draft.exercises[0]?.duration === d ? 'bg-navy font-semibold text-lime' : 'bg-white text-navy/65 ring-1 ring-inset ring-navy/12 hover:ring-lime-dark',
+                          )}
+                        >
+                          {fmtDuration(d)}
+                        </button>
+                      ))}
+                    </div>
                   ) : (
                     <div className="mt-4 flex flex-wrap gap-2">
                       <select value={adding} onChange={(e) => setAdding(e.target.value)} className="field !w-auto !rounded-full !py-2 !text-[13.5px]" aria-label="Exercice à ajouter">
@@ -369,7 +400,7 @@ export default function NewProjectPage() {
                   <p className="eyebrow">Lead assesseur</p>
                   <p className="mt-1.5 text-[13.5px] text-navy/55">{draft.format === 'light' ? 'Il mène l’entretien.' : 'Il pilote la journée, tient la grille et rédige la synthèse.'}</p>
                   <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                    {state.assessors.map((a) => (
+                    {state.assessors.filter((a) => a.active).map((a) => (
                       <button
                         key={a.id}
                         onClick={() => set({ leadAssessorId: a.id, secondAssessorIds: draft.secondAssessorIds.filter((x) => x !== a.id) })}
@@ -389,7 +420,7 @@ export default function NewProjectPage() {
                     <p className="eyebrow">Seconds assesseurs · {preset.minSeconds} minimum</p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {state.assessors
-                        .filter((a) => a.id !== draft.leadAssessorId)
+                        .filter((a) => a.active && a.id !== draft.leadAssessorId)
                         .map((a) => {
                           const on = draft.secondAssessorIds.includes(a.id)
                           return (
@@ -427,14 +458,15 @@ export default function NewProjectPage() {
                 <div className="tick-rule" />
                 <dl className="grid gap-x-8 gap-y-5 text-[14px] sm:grid-cols-2">
                   {[
-                    ['Date', fmtDate(draft.date)],
-                    ['Horaires', `${fmtTime(draft.startTime)} – ${fmtTime(endTime({ ...draft, id: 'draft' }))}`],
-                    ['Lieu', draft.location],
+                    ['Période', draft.period || 'Dates à fixer avec chaque candidat'],
+                    ['Horaires habituels', `${fmtTime(draft.startTime)} à ${fmtTime(endTime({ ...draft, id: 'draft' }))}`],
+                    ['Lieu', venueLabel({ ...draft, id: 'draft' })],
+                    ['Cheffe de projet', state.users.find((u) => u.id === draft.cdpId)?.name ?? 'À définir'],
                     ['Commanditaire', [draft.sponsorName, draft.sponsorTitle].filter(Boolean).join(' · ') || 'Non renseigné'],
                     ['Exercices', draft.exercises.map((e) => exerciseById(e.catalogId).name).join(' · ')],
                     [w.participants, people.length ? people.map((p) => `${p.firstName} ${p.lastName}`).join(', ') : 'À ajouter'],
-                    ['Lead assesseur', state.assessors.find((a) => a.id === draft.leadAssessorId)?.name ?? '—'],
-                    ['Seconds', draft.secondAssessorIds.map((id) => state.assessors.find((a) => a.id === id)?.name).join(', ') || '—'],
+                    ['Lead assesseur', state.assessors.find((a) => a.id === draft.leadAssessorId)?.name ?? 'À définir'],
+                    ['Seconds', draft.secondAssessorIds.map((id) => state.assessors.find((a) => a.id === id)?.name).join(', ') || 'Aucun'],
                   ].map(([k, v]) => (
                     <div key={k}>
                       <dt className="text-[11px] font-semibold uppercase tracking-wider text-navy/45">{k}</dt>

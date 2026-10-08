@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, Check, Lock, Mail, MapPin, SkipForward, Video } from 'lucide-react'
 import { useMe } from '@/lib/useMe'
 import { daysBetween, fmtDate, fmtDuration, fmtTime, todayISO } from '@/lib/dates'
-import { endTime, isDayDone, schedule } from '@/lib/project'
+import { endTime, isDayDone, participantDate, participantStart, scheduleFor, venueLabel } from '@/lib/project'
 import { ButtonLink, Button, ExerciseIcon, PageHeader, cx } from '@/components/ui'
 
 function useRemaining(startedAt: string | undefined, minutes: number) {
@@ -46,13 +46,30 @@ export default function JourJPage() {
   if (!me) return null
   const { participant: p, project, w, f, dispatch } = me
 
-  const slots = schedule(project)
-  const daysToGo = daysBetween(todayISO(), project.date)
+  const slots = scheduleFor(project, p)
+  const date = participantDate(p)
+  const start = participantStart(project, p)
+  const isTeams = project.venue.mode === 'teams'
   const finished = isDayDone(project, p)
   const step = p.dayProgress
 
   const goTo = (index: number) =>
     dispatch({ type: 'updateParticipant', id: p.id, patch: { dayProgress: index, exerciseStartedAt: new Date().toISOString() } })
+
+  /* ---------- Date pas encore fixée ---------- */
+  if (!date)
+    return (
+      <>
+        <PageHeader back={{ href: '/participant', label: 'Mon parcours' }} eyebrow="Votre journée" tone="lime" title="Votre date n’est pas encore fixée" description="Dès qu’elle sera confirmée, vous retrouverez ici toutes les informations pratiques, puis votre programme le jour J." />
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <ButtonLink href="/participant/date" variant="primary">
+            {p.slot.status === 'proposed' ? 'Choisir ma date' : 'Voir où en est ma date'} <ArrowRight size={15} />
+          </ButtonLink>
+        </div>
+      </>
+    )
+
+  const daysToGo = daysBetween(todayISO(), date)
 
   /* ---------- Avant le jour J : programme caché ---------- */
   if (daysToGo > 0)
@@ -71,7 +88,7 @@ export default function JourJPage() {
             </p>
             <div className="tick-rule tick-rule--navy my-7" />
             <p className="tabular font-mono text-[14px] text-white/70">
-              {fmtTime(project.startTime)} → {fmtTime(endTime(project))} · {slots.filter((s) => s.catalog.kind !== 'break').length} séquences
+              {fmtTime(start)} → {fmtTime(endTime(project, start))} · {slots.filter((s) => s.catalog.kind !== 'break').length} séquences
             </p>
           </div>
           <div className="card p-7">
@@ -79,7 +96,7 @@ export default function JourJPage() {
             <ul className="mt-5 space-y-4 text-[14.5px] leading-relaxed">
               {[
                 f.preQuestionnaire ? `Terminez votre ${w.pre} si ce n’est pas déjà fait.` : 'Complétez vos inventaires Hogan si ce n’est pas déjà fait.',
-                project.location.includes('Teams') ? 'Testez votre caméra et votre micro la veille, dans un lieu calme.' : `Prévoyez d’arriver 15 minutes avant, ${project.location}.`,
+                isTeams ? 'Testez votre caméra et votre micro la veille, dans un lieu calme.' : `Prévoyez d’arriver 15 minutes en avance. ${venueLabel(project)}.`,
                 'Gardez de quoi écrire : certaines séquences incluent un temps de préparation.',
               ].map((t) => (
                 <li key={t} className="flex gap-3">
@@ -88,10 +105,15 @@ export default function JourJPage() {
               ))}
             </ul>
             <div className="tick-rule my-6" />
-            <p className="font-heading text-[19px] font-medium">{fmtDate(project.date)}</p>
+            <p className="font-heading text-[19px] font-medium first-letter:uppercase">{fmtDate(date)}</p>
             <p className="mt-1 flex items-center gap-2 text-[13.5px] text-navy/55">
-              <MapPin size={14} /> {project.location}
+              <MapPin size={14} /> {venueLabel(project)}
             </p>
+            {p.teamsUrl && (
+              <a href={p.teamsUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-teal-dark hover:underline">
+                <Video size={14} /> Lien Teams de votre journée
+              </a>
+            )}
           </div>
         </div>
       </>
@@ -101,7 +123,7 @@ export default function JourJPage() {
   if (finished)
     return (
       <>
-        <PageHeader back={{ href: '/participant', label: 'Mon parcours' }} eyebrow={fmtDate(project.date)} tone="lime" title="Votre journée est terminée" description="Merci pour votre engagement tout au long de ces mises en situation." />
+        <PageHeader back={{ href: '/participant', label: 'Mon parcours' }} eyebrow={fmtDate(date)} tone="lime" title="Votre journée est terminée" description="Merci pour votre engagement tout au long de ces mises en situation." />
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1.4fr_1fr]">
           <ol className="card divide-y divide-navy/[0.07]">
             {slots.map((s) => (
@@ -146,15 +168,17 @@ export default function JourJPage() {
           </span>
           <h1 className="dot dot--bright rise-in mt-6 text-[40px] font-medium leading-[1.06] sm:text-[56px]">Bienvenue dans votre journée, {p.firstName}</h1>
           <p className="rise-in mt-5 max-w-xl text-[16.5px] leading-relaxed text-white/65" style={{ animationDelay: '0.1s' }}>
-            {slots.filter((s) => s.catalog.kind !== 'break').length} mises en situation vous attendent, de {fmtTime(project.startTime)} à {fmtTime(endTime(project))}. Chacune se dévoile au moment où elle commence, avec ses consignes.
+            {slots.filter((s) => s.catalog.kind !== 'break').length} mises en situation vous attendent, de {fmtTime(start)} à {fmtTime(endTime(project, start))}. Chacune se dévoile au moment où elle commence, avec ses consignes.
           </p>
           <div className="rise-in mt-10 flex flex-wrap justify-center gap-3" style={{ animationDelay: '0.2s' }}>
             <Button variant="lime" size="lg" onClick={() => goTo(0)}>
               Commencer <ArrowRight size={16} />
             </Button>
-            <a href={project.teamsUrl} target="_blank" rel="noreferrer" className="stadium inline-flex items-center gap-2 border border-white/20 px-7 py-3.5 text-[15px] text-white/80 transition-colors hover:border-lime/60 hover:text-white">
-              <Video size={16} /> Rejoindre Teams
-            </a>
+            {p.teamsUrl && (
+              <a href={p.teamsUrl} target="_blank" rel="noreferrer" className="stadium inline-flex items-center gap-2 border border-white/20 px-7 py-3.5 text-[15px] text-white/80 transition-colors hover:border-lime/60 hover:text-white">
+                <Video size={16} /> Rejoindre Teams
+              </a>
+            )}
           </div>
         </div>
         <div className="tick-rule tick-rule--navy" />
@@ -173,7 +197,7 @@ export default function JourJPage() {
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_1fr] lg:py-16">
           <div key={current.id} className="rise-in">
             <p className="eyebrow eyebrow--on-navy">
-              {isBreak ? 'Pause' : `Séquence ${slots.slice(0, step + 1).filter((s) => s.catalog.kind !== 'break').length} sur ${slots.filter((s) => s.catalog.kind !== 'break').length}`} · {fmtTime(current.start)} – {fmtTime(current.end)}
+              {isBreak ? 'Pause' : `Séquence ${slots.slice(0, step + 1).filter((s) => s.catalog.kind !== 'break').length} sur ${slots.filter((s) => s.catalog.kind !== 'break').length}`} · {fmtTime(current.start)} à {fmtTime(current.end)}
             </p>
             <h1 className="dot dot--bright mt-3 text-[36px] font-medium leading-[1.06] sm:text-[48px]">{current.catalog.name}</h1>
             <p className="mt-3 max-w-xl text-[16px] leading-relaxed text-white/65">{current.catalog.pitch}</p>
@@ -189,8 +213,8 @@ export default function JourJPage() {
               </ul>
             </div>
 
-            {!isBreak && (
-              <a href={project.teamsUrl} target="_blank" rel="noreferrer" className="stadium mt-7 inline-flex items-center gap-2 bg-lime px-6 py-3 text-[15px] font-semibold text-navy transition-colors hover:bg-lime-light">
+            {!isBreak && p.teamsUrl && (
+              <a href={p.teamsUrl} target="_blank" rel="noreferrer" className="stadium mt-7 inline-flex items-center gap-2 bg-lime px-6 py-3 text-[15px] font-semibold text-navy transition-colors hover:bg-lime-light">
                 <Video size={16} /> Rejoindre la séance sur Teams
               </a>
             )}

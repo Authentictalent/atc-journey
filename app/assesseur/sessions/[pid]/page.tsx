@@ -6,7 +6,7 @@ import { Check, Crown, Download, Lock, Sparkles, UserRound } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { PRE_QUESTIONS, SCALE, competencyById } from '@/lib/catalog'
 import { daysBetween, fmtDate, fmtDuration, fmtTime, todayISO } from '@/lib/dates'
-import { CHECKLIST, features, fullName, gridKey, noteKey, schedule } from '@/lib/project'
+import { CHECKLIST, features, fullName, gridKey, noteKey, participantDate, scheduleFor } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import type { GridEntry } from '@/lib/types'
 import { Avatar, Button, EmptyState, ExerciseIcon, PageHeader, Pill, ProgressBar, Tabs, cx } from '@/components/ui'
@@ -19,7 +19,8 @@ export default function AssessorSession() {
   const assessorId = state.session?.assessorId ?? ''
   const p = state.participants.find((x) => x.id === pid)
   const project = state.projects.find((x) => x.id === p?.projectId)
-  const d = project ? daysBetween(todayISO(), project.date) : 0
+  const date = p ? participantDate(p) : null
+  const d = date ? daysBetween(todayISO(), date) : 1
   const [tab, setTab] = useState<Tab>(d > 0 ? 'prep' : 'notes')
 
   if (!p || !project)
@@ -32,7 +33,7 @@ export default function AssessorSession() {
   const w = wording(project.purpose)
   const f = features(project)
   const isLead = project.leadAssessorId === assessorId
-  const slots = schedule(project).filter((s) => s.catalog.kind !== 'break')
+  const slots = scheduleFor(project, p).filter((s) => s.catalog.kind !== 'break')
   const mineSlots = isLead ? slots : slots.filter((s) => s.assessorId === assessorId)
   const checkDone = CHECKLIST.filter((c) => state.checklist[`${assessorId}:${p.id}:${c.id}`]).length
   const graded = project.competencyIds.filter((c) => state.grid[gridKey(p.id, c)]?.score).length
@@ -41,7 +42,7 @@ export default function AssessorSession() {
     const text = [
       `${slot.catalog.name} · ${project.client}`,
       `${w.participant} : ${fullName(p)}`,
-      `${fmtDate(project.date)} · ${fmtTime(slot.start)} – ${fmtTime(slot.end)}`,
+      `${date ? fmtDate(date) : 'Date à fixer'} · ${fmtTime(slot.start)} à ${fmtTime(slot.end)}`,
       '',
       'OBJECTIF',
       slot.catalog.objective,
@@ -64,7 +65,7 @@ export default function AssessorSession() {
     <>
       <PageHeader
         back={{ href: '/assesseur', label: 'Mes sessions' }}
-        eyebrow={`${w.participant} · ${project.client} · ${d > 0 ? fmtDate(project.date, false) : d === 0 ? 'Aujourd’hui' : 'Session passée'}`}
+        eyebrow={`${w.participant} · ${project.client} · ${!date ? 'Date à fixer' : d > 0 ? fmtDate(date, false) : d === 0 ? 'Aujourd’hui' : 'Session passée'}`}
         tone="lime"
         title={fullName(p)}
         description={
@@ -196,7 +197,7 @@ export default function AssessorSession() {
               )}
               {slots.map((s) => {
                 const canEdit = s.assessorId === assessorId || (isLead && !s.assessorId)
-                const live = d === 0 && p.dayProgress === schedule(project).findIndex((x) => x.id === s.id)
+                const live = d === 0 && p.dayProgress === scheduleFor(project, p).findIndex((x) => x.id === s.id)
                 const others = state.assessors.filter((a) => a.id !== assessorId && state.notes[noteKey(p.id, s.id, a.id)]?.text)
                 if (!canEdit && !isLead && !others.length) return null
                 return (
@@ -206,7 +207,7 @@ export default function AssessorSession() {
                       <div className="flex-1">
                         <p className="font-heading text-[17px] font-medium">{s.catalog.name}</p>
                         <p className="tabular font-mono text-[12.5px] text-navy/50">
-                          {fmtTime(s.start)} – {fmtTime(s.end)} · {state.assessors.find((a) => a.id === s.assessorId)?.name ?? 'assesseur à définir'}
+                          {fmtTime(s.start)} à {fmtTime(s.end)} · {state.assessors.find((a) => a.id === s.assessorId)?.name ?? 'assesseur à définir'}
                         </p>
                       </div>
                       {live && (
