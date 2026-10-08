@@ -7,13 +7,12 @@ import { uid, useStore } from '@/lib/store'
 import { EXERCISES, FORMATS, LIGHT_DURATIONS, exerciseById } from '@/lib/catalog'
 import { AssessorSelect, DurationSelect, NoAssessor } from '@/components/cdp/ExerciseControls'
 import { fmtDuration, fmtTime, todayISO } from '@/lib/dates'
-import { endTime, schedule, venueLabel } from '@/lib/project'
+import { endTime, schedule } from '@/lib/project'
 import { wording } from '@/lib/wording'
 import type { Format, Participant, Project, ProjectExercise, Purpose } from '@/lib/types'
-import { Avatar, Button, ExerciseIcon, Field, FormatPill, PageHeader, PurposePill, cx } from '@/components/ui'
+import { Avatar, Button, ExerciseIcon, Field, PageHeader, cx } from '@/components/ui'
 import { VenueFields } from '@/components/cdp/OverviewTab'
 
-const STEPS = ['Cadre', 'Équipe', 'Exercices', 'Participants', 'Récapitulatif'] as const
 
 type Draft = Omit<Project, 'id'>
 type PersonDraft = { key: string; firstName: string; lastName: string; email: string; currentRole: string }
@@ -61,13 +60,8 @@ export default function NewProjectPage() {
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }))
   const setFormat = (format: Format) => set({ format, exercises: presetExercises(format), secondAssessorIds: format === 'light' ? [] : draft.secondAssessorIds })
 
-  const canContinue = [
-    draft.client.trim() && draft.position.trim() && draft.startTime && draft.cdpId,
-    !!draft.leadAssessorId,
-    draft.exercises.length > 0,
-    true,
-    true,
-  ][step]
+  const STEPS = ['Le projet', 'Équipe et exercices', w.participants]
+  const canContinue = [draft.client.trim() && draft.position.trim() && draft.startTime && draft.cdpId, !!draft.leadAssessorId && draft.exercises.length > 0, true][step]
 
   const setEx = (id: string, change: Partial<ProjectExercise>) => set({ exercises: draft.exercises.map((e) => (e.id === id ? { ...e, ...change } : e)) })
 
@@ -117,7 +111,7 @@ export default function NewProjectPage() {
 
   return (
     <>
-      <PageHeader back={{ href: '/projets', label: 'Tous les projets' }} eyebrow="Nouveau dispositif" tone="lime" title="Créer un projet" description="Cinq étapes pour cadrer le dispositif. Tout reste modifiable ensuite." />
+      <PageHeader back={{ href: '/projets', label: 'Tous les projets' }} eyebrow="Nouveau dispositif" tone="lime" title="Créer un projet" description="Trois étapes. Tout reste modifiable ensuite." />
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[240px_1fr]">
         {/* Étapes */}
@@ -235,9 +229,61 @@ export default function NewProjectPage() {
               </div>
             )}
 
-            {/* ---------- 3. Exercices ---------- */}
-            {step === 2 && (
-              <div className="space-y-9">
+            {/* ---------- 2. Équipe et exercices ---------- */}
+            {step === 1 && (
+              <div className="space-y-8">
+                <div>
+                  <p className="eyebrow">Lead assesseur</p>
+                  <p className="mt-1.5 text-[13.5px] text-navy/55">{draft.format === 'light' ? 'Il mène l’entretien.' : 'Il pilote la journée, tient la grille et rédige la synthèse.'}</p>
+                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                    {state.assessors.filter((a) => a.active).map((a) => (
+                      <button
+                        key={a.id}
+                        onClick={() => set({ leadAssessorId: a.id, secondAssessorIds: draft.secondAssessorIds.filter((x) => x !== a.id) })}
+                        className={cx('flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors', draft.leadAssessorId === a.id ? 'border-navy bg-navy text-white' : 'border-navy/10 hover:border-lime-dark')}
+                      >
+                        <Avatar name={a.name} size={34} tone={draft.leadAssessorId === a.id ? 'lime' : 'teal'} />
+                        <span>
+                          <span className="block text-[14px] font-semibold">{a.name}</span>
+                          <span className={cx('block text-[12px]', draft.leadAssessorId === a.id ? 'text-white/55' : 'text-navy/50')}>{a.title}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {preset.minSeconds > 0 && (
+                  <div>
+                    <p className="eyebrow">Seconds assesseurs · {preset.minSeconds} minimum</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {state.assessors
+                        .filter((a) => a.active && a.id !== draft.leadAssessorId)
+                        .map((a) => {
+                          const on = draft.secondAssessorIds.includes(a.id)
+                          return (
+                            <button
+                              key={a.id}
+                              onClick={() => toggleSecond(a.id)}
+                              aria-pressed={on}
+                              className={cx(
+                                'stadium flex items-center gap-1.5 px-3.5 py-2 text-[13px] transition-colors',
+                                on ? 'bg-lime font-semibold text-navy' : 'bg-white text-navy/65 ring-1 ring-inset ring-navy/10 hover:ring-lime-dark',
+                              )}
+
+                            >
+                              {on && <Check size={13} />} {a.name}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  </div>
+                )}
+                <p className="text-[13px] text-navy/50">Juste en dessous, attribuez un assesseur à chaque exercice.</p>
+              </div>
+            )}
+
+            {/* Exercices, sous l’équipe */}
+            {step === 1 && (
+              <div className="mt-10 space-y-9 border-t border-navy/[0.07] pt-10">
                 <div>
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <p className="eyebrow">Planning · format {preset.label}</p>
@@ -329,8 +375,8 @@ export default function NewProjectPage() {
               </div>
             )}
 
-            {/* ---------- 4. Participants ---------- */}
-            {step === 3 && (
+            {/* ---------- 3. Participants ---------- */}
+            {step === 2 && (
               <div className="space-y-7">
                 <div>
                   <p className="eyebrow">{w.participants}</p>
@@ -375,89 +421,6 @@ export default function NewProjectPage() {
               </div>
             )}
 
-            {/* ---------- 2. Équipe ---------- */}
-            {step === 1 && (
-              <div className="space-y-8">
-                <div>
-                  <p className="eyebrow">Lead assesseur</p>
-                  <p className="mt-1.5 text-[13.5px] text-navy/55">{draft.format === 'light' ? 'Il mène l’entretien.' : 'Il pilote la journée, tient la grille et rédige la synthèse.'}</p>
-                  <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                    {state.assessors.filter((a) => a.active).map((a) => (
-                      <button
-                        key={a.id}
-                        onClick={() => set({ leadAssessorId: a.id, secondAssessorIds: draft.secondAssessorIds.filter((x) => x !== a.id) })}
-                        className={cx('flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors', draft.leadAssessorId === a.id ? 'border-navy bg-navy text-white' : 'border-navy/10 hover:border-lime-dark')}
-                      >
-                        <Avatar name={a.name} size={34} tone={draft.leadAssessorId === a.id ? 'lime' : 'teal'} />
-                        <span>
-                          <span className="block text-[14px] font-semibold">{a.name}</span>
-                          <span className={cx('block text-[12px]', draft.leadAssessorId === a.id ? 'text-white/55' : 'text-navy/50')}>{a.title}</span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {preset.minSeconds > 0 && (
-                  <div>
-                    <p className="eyebrow">Seconds assesseurs · {preset.minSeconds} minimum</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {state.assessors
-                        .filter((a) => a.active && a.id !== draft.leadAssessorId)
-                        .map((a) => {
-                          const on = draft.secondAssessorIds.includes(a.id)
-                          return (
-                            <button
-                              key={a.id}
-                              onClick={() => toggleSecond(a.id)}
-                              aria-pressed={on}
-                              className={cx(
-                                'stadium flex items-center gap-1.5 px-3.5 py-2 text-[13px] transition-colors',
-                                on ? 'bg-lime font-semibold text-navy' : 'bg-white text-navy/65 ring-1 ring-inset ring-navy/10 hover:ring-lime-dark',
-                              )}
-                            >
-                              {on && <Check size={13} />} {a.name}
-                            </button>
-                          )
-                        })}
-                    </div>
-                  </div>
-                )}
-                <p className="text-[13px] text-navy/50">À l’étape suivante, vous attribuez un assesseur à chaque exercice, dans cette équipe ou parmi les autres assesseurs ATC.</p>
-              </div>
-            )}
-
-            {/* ---------- 5. Récapitulatif ---------- */}
-            {step === 4 && (
-              <div className="space-y-7">
-                <div className="flex flex-wrap items-center gap-2">
-                  <FormatPill format={draft.format} />
-                  <PurposePill purpose={draft.purpose} />
-                </div>
-                <div>
-                  <h2 className="dot font-heading text-[30px] font-medium leading-tight">{draft.client}</h2>
-                  <p className="text-[15px] text-navy/60">{draft.position}</p>
-                </div>
-                <div className="tick-rule" />
-                <dl className="grid gap-x-8 gap-y-5 text-[14px] sm:grid-cols-2">
-                  {[
-                    ['Période', draft.period || 'Dates à fixer avec chaque candidat'],
-                    ['Horaires habituels', `${fmtTime(draft.startTime)} à ${fmtTime(endTime({ ...draft, id: 'draft' }))}`],
-                    ['Lieu', venueLabel({ ...draft, id: 'draft' })],
-                    ['Cheffe de projet', state.users.find((u) => u.id === draft.cdpId)?.name ?? 'À définir'],
-                    ['Commanditaire', [draft.sponsorName, draft.sponsorTitle].filter(Boolean).join(' · ') || 'Non renseigné'],
-                    ['Exercices', draft.exercises.map((e) => exerciseById(e.catalogId).name).join(' · ')],
-                    [w.participants, people.length ? people.map((p) => `${p.firstName} ${p.lastName}`).join(', ') : 'À ajouter'],
-                    ['Lead assesseur', state.assessors.find((a) => a.id === draft.leadAssessorId)?.name ?? 'À définir'],
-                    ['Seconds', draft.secondAssessorIds.map((id) => state.assessors.find((a) => a.id === id)?.name).join(', ') || 'Aucun'],
-                  ].map(([k, v]) => (
-                    <div key={k}>
-                      <dt className="text-[11px] font-semibold uppercase tracking-wider text-navy/45">{k}</dt>
-                      <dd className="mt-1">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
           </div>
 
           <div className="mt-5 flex items-center justify-between">
@@ -470,7 +433,7 @@ export default function NewProjectPage() {
               </Button>
             ) : (
               <Button variant="lime" size="lg" onClick={create}>
-                <Check size={16} /> Créer le dispositif
+                <Check size={16} /> Créer le projet
               </Button>
             )}
           </div>

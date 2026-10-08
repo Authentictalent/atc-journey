@@ -4,12 +4,9 @@ import { useState } from 'react'
 import { CalendarDays, Check, Clock, MapPin, Pencil, UserRound } from 'lucide-react'
 import { useStore } from '@/lib/store'
 import { fmtDuration, fmtTime } from '@/lib/dates'
-import { endTime, features, fmtSlot, fullName, isDayDone, isPreDone, PHASE_LABEL, phaseOf, requiredActions, venueLabel } from '@/lib/project'
-import { wording } from '@/lib/wording'
-import type { Participant, Phase, Project } from '@/lib/types'
-import { Button, Dialog, Field, ProgressBar, SectionTitle, cx } from '@/components/ui'
-
-const PHASES: Phase[] = ['pre', 'jour-j', 'restitution', 'clos']
+import { endTime, requiredActions, venueLabel } from '@/lib/project'
+import type { Participant, Project } from '@/lib/types'
+import { Button, Dialog, Field, SectionTitle, cx } from '@/components/ui'
 
 export function OverviewTab({
   project,
@@ -20,50 +17,21 @@ export function OverviewTab({
   participants: Participant[]
   onTab: (t: 'participants' | 'planning' | 'team') => void
 }) {
-  const { state, dispatch } = useStore()
+  const { dispatch } = useStore()
   const [editing, setEditing] = useState(false)
-  const w = wording(project.purpose)
-  const f = features(project)
-  const phase = phaseOf(project, participants)
   const actions = requiredActions(project, participants)
-  const phaseIndex = PHASES.indexOf(phase)
-  const cdp = state.users.find((u) => u.id === project.cdpId)
-
-  const n = participants.length || 1
-  const metrics = [
-    { label: 'Mails de bienvenue', value: participants.filter((p) => p.welcomeSentAt).length },
-    { label: 'Dates confirmées', value: participants.filter((p) => p.slot.status === 'confirmed').length },
-    { label: 'Inventaires Hogan', value: participants.filter((p) => p.hogan === 'done').length },
-    ...(f.preQuestionnaire ? [{ label: `Questionnaire ${w.pre}`, value: participants.filter((p) => p.preQuestionnaire === 'done').length }] : []),
-    { label: w.assessment, value: participants.filter((p) => isDayDone(project, p)).length },
-    ...(f.postQuestionnaire ? [{ label: `Questionnaire ${w.post}`, value: participants.filter((p) => p.postQuestionnaire === 'done').length }] : []),
-    ...(f.feedback ? [{ label: 'Feedbacks débloqués', value: participants.filter((p) => p.feedback.status === 'unlocked').length }] : []),
-  ]
-  const dated = [...participants].sort((a, b) => (a.slot.confirmed ? a.slot.confirmed.date + a.slot.confirmed.time : '9999').localeCompare(b.slot.confirmed ? b.slot.confirmed.date + b.slot.confirmed.time : '9999'))
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
       <div className="space-y-8">
-        <div className="card p-6 sm:p-7">
-          <p className="eyebrow">Phase du dispositif</p>
-          <ol className="mt-5 grid grid-cols-4 gap-2">
-            {PHASES.map((ph, i) => (
-              <li key={ph}>
-                <div className={cx('h-1.5 rounded-full', i < phaseIndex ? 'bg-lime-dark' : i === phaseIndex ? 'bg-lime' : 'bg-navy/[0.07]')} />
-                <p className={cx('mt-2.5 text-[13px]', i === phaseIndex ? 'font-semibold text-navy' : i < phaseIndex ? 'text-navy/60' : 'text-navy/35')}>{PHASE_LABEL[ph]}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-
         <div>
-          <SectionTitle eyebrow="À traiter" tone="peach" title={actions.length ? `${actions.length} action${actions.length > 1 ? 's' : ''} requise${actions.length > 1 ? 's' : ''}` : 'Rien à signaler'} />
+          <SectionTitle eyebrow="À faire" tone="peach" title={actions.length ? `${actions.length} action${actions.length > 1 ? 's' : ''}` : 'Rien à faire'} />
           {actions.length === 0 ? (
             <div className="card flex items-center gap-4 p-5">
               <span className="stadium flex h-10 w-10 items-center justify-center bg-lime-pale text-lime-dark">
                 <Check size={18} />
               </span>
-              <p className="text-[14px] text-navy/65">Le projet est complet. Les prochaines étapes apparaîtront ici.</p>
+              <p className="text-[14px] text-navy/65">Tout est en ordre. Les prochaines étapes apparaîtront ici.</p>
             </div>
           ) : (
             <ul className="space-y-2.5">
@@ -85,30 +53,6 @@ export function OverviewTab({
                 </li>
               ))}
             </ul>
-          )}
-        </div>
-
-        <div>
-          <SectionTitle eyebrow="Avancement" title={`Parcours des ${w.participants.toLowerCase()}`} />
-          <div className="card divide-y divide-navy/[0.07]">
-            {metrics.map((m) => (
-              <div key={m.label} className="grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2 px-6 py-4 sm:grid-cols-[220px_1fr_auto]">
-                <span className="text-[14px] font-medium">{m.label}</span>
-                <ProgressBar
-                  value={(m.value / n) * 100}
-                  tone={m.value === participants.length && participants.length ? 'lime' : 'teal'}
-                  className="col-span-2 row-start-2 sm:col-span-1 sm:row-start-auto"
-                />
-                <span className="tabular col-start-2 row-start-1 text-[13px] text-navy/55 sm:col-start-auto sm:row-start-auto">
-                  {m.value} / {participants.length}
-                </span>
-              </div>
-            ))}
-          </div>
-          {phase === 'pre' && participants.some((p) => !isPreDone(project, p)) && (
-            <p className="mt-3 text-[13px] text-navy/55">
-              {participants.filter((p) => !isPreDone(project, p)).length} {w.participant.toLowerCase()}(s) n’ont pas terminé leur {w.pre}.
-            </p>
           )}
         </div>
       </div>
@@ -135,55 +79,14 @@ export function OverviewTab({
             <li className="flex items-start gap-3">
               <CalendarDays size={16} className="mt-0.5 shrink-0 text-navy/40" /> {project.period || 'Période à préciser'}
             </li>
-          </ul>
-          <div className="tick-rule my-5" />
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-navy/45">Dates des {w.participants.toLowerCase()}</p>
-          <ul className="mt-3 space-y-2">
-            {dated.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-3 text-[13.5px]">
-                <span className="truncate">{fullName(p)}</span>
-                <span className={cx('shrink-0 text-[12.5px]', p.slot.status === 'confirmed' ? 'tabular font-semibold' : p.slot.status === 'counter' ? 'font-semibold text-peach-dark' : 'text-navy/45')}>
-                  {p.slot.status === 'confirmed' && p.slot.confirmed
-                    ? fmtSlot(p.slot.confirmed)
-                    : p.slot.status === 'proposed'
-                      ? 'Créneaux envoyés'
-                      : p.slot.status === 'counter'
-                        ? 'Contre-proposition'
-                        : 'À proposer'}
-                </span>
-              </li>
-            ))}
-            {!participants.length && <li className="text-[13px] text-navy/50">Aucun {w.participant.toLowerCase()} pour l’instant.</li>}
-          </ul>
-        </div>
-
-        <div className="card p-6">
-          <p className="eyebrow eyebrow--peach">Commanditaire</p>
-          <div className="mt-3 flex items-center gap-3">
-            <span className="stadium flex h-10 w-10 items-center justify-center bg-peach-pale text-peach-dark">
-              <UserRound size={18} />
-            </span>
-            <div className="min-w-0">
-              <p className="font-semibold">{project.sponsorName || 'Non renseigné'}</p>
-              {project.sponsorTitle && <p className="text-[13px] text-navy/55">{project.sponsorTitle}</p>}
-              {project.sponsorEmail && <p className="truncate text-[12.5px] text-navy/45">{project.sponsorEmail}</p>}
-            </div>
-          </div>
-          <div className="tick-rule my-5" />
-          <div className="flex items-center justify-between text-[13.5px]">
-            <span className="text-navy/60">Debrief client</span>
-            {project.debriefClientDone ? (
-              <span className="flex items-center gap-1.5 font-semibold text-lime-dark">
-                <Check size={14} /> Réalisé
+            <li className="flex items-start gap-3">
+              <UserRound size={16} className="mt-0.5 shrink-0 text-navy/40" />
+              <span>
+                {project.sponsorName || 'Commanditaire à renseigner'}
+                {project.sponsorTitle && <span className="block text-[12.5px] text-navy/50">{project.sponsorTitle}</span>}
               </span>
-            ) : (
-              <span className="text-navy/45">Après les journées</span>
-            )}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-[13.5px]">
-            <span className="text-navy/60">Cheffe de projet</span>
-            <span className="font-semibold">{cdp?.name ?? 'À définir'}</span>
-          </div>
+            </li>
+          </ul>
         </div>
       </aside>
 
